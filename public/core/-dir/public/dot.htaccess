@@ -1,0 +1,6 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    Options +MultiViews
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule . /404.php [L]
+</IfModule>

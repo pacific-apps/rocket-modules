@@ -1,0 +1,67 @@
+#!/usr/bin/php
+<?php
+
+if (php_sapi_name() !== 'cli') {
+    exit;
+}
+
+$GLOBALS['module'] = [];
+$GLOBALS['module']['author'] = 'rocketPHP';
+$GLOBALS['module']['dirs'] = [];
+$GLOBALS['module']['files'] = [];
+
+
+function map(
+    string $destinationContext,
+    string $sourceContext,
+    string $publicContext
+    )
+{
+    $dir = scandir($sourceContext);
+    foreach ($dir as $key) {
+        if ($key!=='.'&&$key!=='..') {
+            $file = $sourceContext.'/'.$key;
+            $public = $publicContext.'/'.$key;
+            $directoryContext = $destinationContext.$key.'/';
+            if (is_dir($file)) {
+                array_push($GLOBALS['module']['dirs'],rtrim($directoryContext, '/'));
+                map($directoryContext,$file,$public);
+            }
+            else {
+                $resolvedDestinationContext = str_replace('dot.','.',$destinationContext.$key);
+                $GLOBALS['module']['files'][$resolvedDestinationContext] = $public;
+            }
+        }
+
+    }
+}
+
+if (isset($argv[1])) {
+    $package = scandir(__dir__."/public/{$argv[1]}");
+    $i=0;
+    foreach ($package as $key) {
+        if ($key!=='.'&&$key!=='..') {
+            if ($key==='-dir') {
+                map('',__dir__."/public/{$argv[1]}/-dir","/-dir");
+            }
+            else {
+                if ($i===0) {
+                    array_push($GLOBALS['module']['dirs'],"rocket_modules/{$argv[1]}");
+                }
+                $file = __dir__."/public/{$argv[1]}/{$key}";
+                if (is_dir($file)) {
+                    array_push($GLOBALS['module']['dirs'],"rocket_modules/{$argv[1]}/{$key}");
+                    map("rocket_modules/{$argv[1]}/{$key}/",$file,"/{$key}");
+                }
+                else {
+                    $GLOBALS['module']['files']["rocket_modules/{$argv[1]}/{$key}"] = "/{$key}";
+                }
+                $i++;
+            }
+
+        }
+    }
+    $moduleJson = __dir__."/public/{$argv[1]}/module.json";
+    file_put_contents($moduleJson,json_encode($GLOBALS['module']));
+    echo "Successfully built rocket_modules/{$argv[1]}".PHP_EOL;
+}

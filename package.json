@@ -1,0 +1,22 @@
+{
+  "name": "rocket-modules",
+  "version": "1.0.0",
+  "description": "Rocket modules CDN",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pacific-apps/rocket-modules.git"
+  },
+  "author": "Ken Terrado",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/pacific-apps/rocket-modules/issues"
+  },
+  "homepage": "https://github.com/pacific-apps/rocket-modules#readme",
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
