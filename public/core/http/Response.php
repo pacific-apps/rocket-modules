@@ -41,6 +41,7 @@ class Response
     public function send()
     {
         http_response_code($this->statusCode);
+        exit();
     }
 
     public static function abort(

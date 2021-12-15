@@ -25,9 +25,21 @@ class Request extends Parser
         return $this->factory->query();
     }
 
-    public function payload()
+    public function payload(
+        string $payload = null
+        )
     {
-        return $this->factory->payload();
+        # Returns the entire payload object if no argument is passed
+        if (null===$payload) return $this->factory->payload();
+
+        # Returns FALSE if the no payload under the name key: $payload is passed
+        if (!isset($this->factory->payload()->$payload)) {
+            \core\http\Response::abort();
+            exit();
+        }
+
+        # Returns the actual value of the payload based on the key $payload;
+        return $this->factory->payload()->$payload;
     }
 
     private function bootQuery()
@@ -53,4 +65,14 @@ class Request extends Parser
            files: $_FILES
        );
     }
+
+    public static function method(
+        string $method = null
+        )
+    {
+        if (null===$method) return $_SERVER["REQUEST_METHOD"];
+        return ($_SERVER["REQUEST_METHOD"]===$method);
+    }
+
+
 }
