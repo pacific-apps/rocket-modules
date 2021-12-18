@@ -19,6 +19,7 @@ class PsqlBuilder
         )
     {
         $this->psqlPath = $this->storagePath.$psqlFile.'.psql';
+        return $this;
     }
 
     public function data(
@@ -26,6 +27,7 @@ class PsqlBuilder
         )
     {
         $this->data = $data;
+        return $this;
     }
 
     public function build()
@@ -52,7 +54,7 @@ class PsqlBuilder
 
     private static function release(array $data, string $tmp, array $res): string
     {
-        return str_replace($res[0], $data[$res[1]] ?? " ", $tmp);
+        return str_replace($res[0], $data[$res[1]] ?? 'NULL', $tmp);
     }
 
 

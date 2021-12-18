@@ -1,0 +1,5 @@
+INSERT INTO tk_users_profile (
+    user_id, first_name, last_name, middle_name, suffix, profile_photo, birth_date, gender
+) VALUES (
+    '{{userId}}', '{{firstName}}', '{{lastName}}', '{{middleName}}', '{{suffix}}', '{{profilePhoto}}', '{{birthDate}}','{{gender}}'
+)

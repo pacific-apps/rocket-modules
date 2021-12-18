@@ -11,22 +11,22 @@
          /**
           * @var string
           */
-         protected const SERVER_NAME = "localhost";
+         public const SERVER_NAME = "localhost";
 
          /**
           * @var string
           */
-         protected const USERNAME = "root";
+         public const USERNAME = "root";
 
          /**
           * @var string
           */
-         protected const DATABASE_NAME = "lake_prod_db";
+         public const DATABASE_NAME = "rocket_db";
 
          /**
           * @var string
           */
-         protected const PASSWORD = "";
+         public const PASSWORD = "";
 
          /**
          * Returns an array with has_record key either set to true or false
@@ -35,10 +35,16 @@
          *
          * @since v1.0.0
          */
-        protected static function get($query)
+        public static function get($query)
         {
             $data = [];
             $result = Self::connect()->query($query);
+
+            if (!$result) {
+                $data["hasRecord"] = false;
+                return $data;
+            }
+
             if ($result->num_rows === 0 || $result->num_rows === '0') {
                 $data["hasRecord"] = false;
                 return $data;
@@ -58,7 +64,7 @@
          *
          * @since v1.0.0
          */
-        protected static function save($query)
+        public static function save($query)
         {
             return Self::connect()->query($query);
         }

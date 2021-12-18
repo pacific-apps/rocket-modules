@@ -22,17 +22,24 @@ class Accept {
 
     public static function query(
         \core\http\Request $request,
-        array $queries
+        array $queries,
+        \Closure $closure = null
         )
     {
         foreach ($queries as $query) {
-            if (!Self::parseAcceptNotation($request,$query,'query')) {
+            $acceptQuery = Self::parseAcceptNotation($request,$query,'query');
+            if (!$acceptQuery["result"]) {
 
                 # Modify your API response here if there is no required
                 # query being sent together with the request
                 return Response::abort("Invalid query");
 
             }
+
+            if (null!==$closure) {
+                $closure($acceptQuery["key"],$acceptQuery["value"]);
+            }
+
         }
     }
 
@@ -43,12 +50,17 @@ class Accept {
         )
     {
         foreach ($payloads as $payload) {
-            if (!Self::parseAcceptNotation($request,$payload,'payload',$closure)) {
+            $acceptPayload = Self::parseAcceptNotation($request,$payload,'payload');
+            if (!$acceptPayload["result"]) {
 
                 # Modify your API response here if there is no required
                 # payload being sent together with the request
                 return Response::abort("Invalid payload");
 
+            }
+
+            if (null!==$closure) {
+                $closure($acceptPayload["key"],$acceptPayload["value"]);
             }
 
         }
@@ -57,23 +69,31 @@ class Accept {
     private static function parseAcceptNotation(
         \core\http\Request $request,
         string $notation,
-        string $type,
-        \Closure $closure = null
+        string $type
         )
     {
+        # Parsing accept notation
         $notationAssignment = explode("=",$notation);
-        $key = $notationAssignment[0];
+        $key                = $notationAssignment[0];
+
+        # Checking if the predefined value in the accept notation
+        # matches with what has been given during the call
         if (isset($notationAssignment[1])&&isset($request->$type()->$key)) {
             $value = $notationAssignment[1];
-            if (null!==$closure) {
-                $closure($notationAssignment[0],$notationAssignment[1]);
-            }
-            return ($request->$type()->$key === $value);
+            return [
+                "result" => ($request->$type()->$key === $value),
+                "key" => $key,
+                "value" => $value
+            ];
         }
-        if (null!==$closure) {
-            $closure($notationAssignment[0],$request->$type()->$key??null);
-        }
-        return isset($request->$type()->$key);
+
+        # If no predefined value is given
+        return [
+            "result" => isset($request->$type()->$key),
+            "key" => $key,
+            "value" => $request->$type()->$key??null
+        ];
+
     }
 
 

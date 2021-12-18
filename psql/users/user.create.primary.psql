@@ -1,5 +1,5 @@
 INSERT INTO tk_users_primary (
-    user_id, first_name, last_name, created_at, email, password, username, status
+    user_id, created_at, activated_at, email, role, permissions, password, username, status
 ) VALUES (
-    '{{userId}}', '{{firstname}}', '{{lastname}}', '{{createdAt}}', '{{email}}', '{{password}}','{{username}}','{{status}}'
+    '{{userId}}', '{{createdAt}}', '{{activatedAt}}', '{{email}}', '{{role}}', '{{permissions}}', '{{password}}','{{username}}','{{status}}'
 )
