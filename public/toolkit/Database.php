@@ -54,8 +54,23 @@
             foreach ($rows as $key => $value) {
                 $data[$key] = $value;
             }
+
             return $data;
         }
+
+        /**
+         * Checks if a certain row exists in a table based on a certain condition
+         * @param string $query
+         * @return bool 
+         */
+        public static function doExist($query)
+        {
+            return filter_var(
+                Self::connect()->query($query)->fetch_row()[0],
+                FILTER_VALIDATE_BOOLEAN
+            );
+        }
+
 
         /**
          * Runs query, but takes no data from the database

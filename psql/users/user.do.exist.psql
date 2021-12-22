@@ -1,0 +1,1 @@
+SELECT EXISTS(select * from tk_users_primary where {{condition}}='{{value}}' limit 1)

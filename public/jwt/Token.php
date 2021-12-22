@@ -30,7 +30,7 @@ class Token extends Validator {
         if (!isset($tokenParts[1])) return [];
         $tokenPayload = base64_decode($tokenParts[1]);
 
-        return json_decode($tokenPayload);
+        return json_decode($tokenPayload,TRUE);
 
     }
 

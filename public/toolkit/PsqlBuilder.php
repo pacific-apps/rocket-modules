@@ -57,6 +57,22 @@ class PsqlBuilder
         return str_replace($res[0], $data[$res[1]] ?? 'NULL', $tmp);
     }
 
+    public static function set(
+        array $args
+        )
+    {
+        $i = 0;
+        $tmp = '';
+        # Requires associative array
+        foreach ($args as $key => $value) {
+            if ($i>0) {
+                $tmp = $tmp.', ';
+            }
+            $tmp = $tmp.$key.'='.$value;
+            $i++;
+        }
+        echo $tmp;
+    }
 
 
 }
