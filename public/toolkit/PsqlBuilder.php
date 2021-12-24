@@ -8,10 +8,12 @@ class PsqlBuilder
     private $storagePath;
     private $psqlPath;
     private $data;
+    private $setArguments;
 
     public function __construct()
     {
         $this->storagePath = $_SERVER["DOCUMENT_ROOT"]."/psql/";
+        $this->setArguments = null;
     }
 
     public function use(
@@ -27,6 +29,7 @@ class PsqlBuilder
         )
     {
         $this->data = $data;
+        $this->data['setArguments'] = $this->setArguments;
         return $this;
     }
 
@@ -57,7 +60,7 @@ class PsqlBuilder
         return str_replace($res[0], $data[$res[1]] ?? 'NULL', $tmp);
     }
 
-    public static function set(
+    public function set(
         array $args
         )
     {
@@ -71,7 +74,8 @@ class PsqlBuilder
             $tmp = $tmp.$key.'='.$value;
             $i++;
         }
-        echo $tmp;
+        $this->setArguments = $tmp;
+        return $this;
     }
 
 

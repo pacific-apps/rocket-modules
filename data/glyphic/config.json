@@ -1,0 +1,8 @@
+{
+    "db_tables":{
+        "tennants": {
+
+        }
+    },
+    "local_data_path":"/data/glyphic"
+}

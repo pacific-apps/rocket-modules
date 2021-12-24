@@ -21,11 +21,13 @@ class Accept {
     }
 
     public static function query(
-        \core\http\Request $request,
         array $queries,
         \Closure $closure = null
         )
     {
+
+        $request = new \core\http\Request;
+
         foreach ($queries as $query) {
             $acceptQuery = Self::parseAcceptNotation($request,$query,'query');
             if (!$acceptQuery["result"]) {
@@ -44,11 +46,13 @@ class Accept {
     }
 
     public static function payload(
-        \core\http\Request $request,
         array $payloads,
         \Closure $closure = null
         )
     {
+
+        $request = new \core\http\Request;
+
         foreach ($payloads as $payload) {
             $acceptPayload = Self::parseAcceptNotation($request,$payload,'payload');
             if (!$acceptPayload["result"]) {

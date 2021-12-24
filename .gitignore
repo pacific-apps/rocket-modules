@@ -2,3 +2,4 @@ node_modules
 /rocket_modules
 .env
 /local/test
+/logs/toolkit

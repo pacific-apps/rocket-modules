@@ -61,12 +61,16 @@
         /**
          * Checks if a certain row exists in a table based on a certain condition
          * @param string $query
-         * @return bool 
+         * @return bool
          */
         public static function doExist($query)
         {
+            $result = Self::connect()->query($query);
+            if (false===$result) {
+                return false;
+            }
             return filter_var(
-                Self::connect()->query($query)->fetch_row()[0],
+                $result->fetch_row()[0],
                 FILTER_VALIDATE_BOOLEAN
             );
         }

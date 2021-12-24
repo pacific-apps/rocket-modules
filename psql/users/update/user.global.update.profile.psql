@@ -1,3 +1,3 @@
 UPDATE tk_users_profile
-SET {{condition}}
+SET {{setArguments}}
 WHERE user_id = '{{id}}'

@@ -54,6 +54,16 @@ class Response
         ]);
     }
 
+    public static function error(
+        string $message = null
+        )
+    {
+        return Self::transmit([
+            'code' => 500,
+            'exception' => $message ?? 'Internal Server Error'
+        ]);
+    }
+
     public static function unauthorized(
         string $message = null
         )

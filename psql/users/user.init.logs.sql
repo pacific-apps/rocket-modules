@@ -1,0 +1,8 @@
+CREATE TABLE tk_users_logs (
+    id INT(12) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id VARCHAR(32) NOT NULL,
+    log_id VARCHAR(32) NOT NULL,
+    log_type VARCHAR(32) NOT NULL,
+    log_by VARCHAR(32) NOT NULL,
+    log_at VARCHAR(32) NOT NULL
+);

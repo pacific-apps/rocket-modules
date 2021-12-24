@@ -1,0 +1,1 @@
+SELECT status from tk_users_primary where user_id = '{{userId}}'
