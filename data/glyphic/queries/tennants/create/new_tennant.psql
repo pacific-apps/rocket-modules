@@ -1,0 +1,5 @@
+INSERT INTO {{tableName}} (
+    tennantId, publicKey, privateKey, createdAt, podId, domain, status
+) VALUES (
+    '{{id}}', '{{publicKey}}', '{{privateKey}}', '{{createdAt}}', {{podId}}, '{{domain}}', '{{status}}'
+)

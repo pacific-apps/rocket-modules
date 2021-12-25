@@ -1,0 +1,13 @@
+CREATE TABLE {{tableName}} (
+    id INT(12) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    userId VARCHAR(32) NOT NULL,
+    firstName VARCHAR(64) NOT NULL,
+    middleName VARCHAR(64) NOT NULL,
+    lastName VARCHAR(32) NOT NULL,
+    nameTitle VARCHAR(32),
+    suffix VARCHAR(32),
+    gender VARCHAR(32),
+    profilePhoto TEXT,
+    tennantId VARCHAR(32) NOT NULL,
+    recordType VARCHAR(32) NOT NULL
+);

@@ -1,0 +1,11 @@
+CREATE TABLE {{tableName}} (
+    id INT(12) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    userId VARCHAR(32) NOT NULL,
+    verfKey VARCHAR(64) NOT NULL,
+    createdAt VARCHAR(32) NOT NULL,
+    createdBy VARCHAR(32) NOT NULL,
+    createdFor VARCHAR(32) NOT NULL,
+    toExpireAt VARCHAR(32) NOT NULL,
+    tennantId VARCHAR(32) NOT NULL,
+    recordType VARCHAR(32) NOT NULL
+);

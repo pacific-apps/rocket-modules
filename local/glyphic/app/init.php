@@ -81,7 +81,7 @@ foreach ($initTables as $tableNames) {
     if ($tableNames!=='.'&&$tableNames!=='..') {
         list($tableName,$value) = explode('.',$tableNames,2);
         # Executing the query for each init SQL files
-        $query = new MySQLQueryBuilder('init/main_tennants',[
+        $query = new MySQLQueryBuilder("init/{$tableName}",[
             'tableName' => $tableAlias[$tableName]
         ]);
         MySQLDatabase::save(

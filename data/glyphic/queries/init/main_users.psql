@@ -1,0 +1,13 @@
+CREATE TABLE {{tableName}} (
+    id INT(12) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    userId VARCHAR(32) NOT NULL,
+    username VARCHAR(32) NOT NULL,
+    email VARCHAR(64) NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    createdAt VARCHAR(32) NOT NULL,
+    activatedAt VARCHAR(32),
+    role VARCHAR(32) NOT NULL,
+    permissions VARCHAR(64) NOT NULL,
+    tennantId VARCHAR(32) NOT NULL,
+    status VARCHAR(32) NOT NULL
+);

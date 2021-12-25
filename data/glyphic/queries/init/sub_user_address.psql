@@ -1,0 +1,20 @@
+CREATE TABLE {{tableName}} (
+    id INT(12) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    userId VARCHAR(32) NOT NULL,
+    addressLine1 VARCHAR (32),
+    addressLine2 VARCHAR(32),
+    apartment VARCHAR(32),
+    building VARCHAR(32),
+    street VARCHAR(32),
+    zone VARCHAR(64),
+    barangay VARCHAR(64),
+    town VARCHAR(64),
+    city VARCHAR(64),
+    province VARCHAR(64),
+    region VARCHAR(64),
+    island VARCHAR(64),
+    country VARCHAR(64),
+    zipcode VARCHAR(64),
+    tennantId VARCHAR(32) NOT NULL,
+    recordType VARCHAR(32) NOT NULL
+);

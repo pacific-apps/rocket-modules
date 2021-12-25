@@ -1,0 +1,14 @@
+CREATE TABLE {{tableName}} (
+    id INT(12) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    userId VARCHAR(32) NOT NULL,
+    secondaryEmail VARCHAR(64),
+    businessEmail VARCHAR(64),
+    primaryPhone VARCHAR(32),
+    secondaryPhone VARCHAR(32),
+    businessPhone VARCHAR(32),
+    faxNumber VARCHAR(32),
+    emerContPerson VARCHAR(64),
+    emerContNumber VARCHAR(32),
+    tennantId VARCHAR(32) NOT NULL,
+    recordType VARCHAR(32) NOT NULL
+);
