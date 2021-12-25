@@ -41,6 +41,7 @@ class Response
     public function send()
     {
         http_response_code($this->statusCode);
+        exit();
     }
 
     public static function abort(
@@ -50,6 +51,16 @@ class Response
         return Self::transmit([
             'code' => 400,
             'exception' => $message ?? 'Invalid request'
+        ]);
+    }
+
+    public static function error(
+        string $message = null
+        )
+    {
+        return Self::transmit([
+            'code' => 500,
+            'exception' => $message ?? 'Internal Server Error'
         ]);
     }
 
