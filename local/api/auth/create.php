@@ -19,37 +19,54 @@ $response = new Response;
 
 # Specifying this api call's request method, payload, and query params
 Accept::method('POST');
-Accept::query($request,['auth=user']);
+Accept::query(['auth=user']);
 
-if (!isset($request->payload()->email)) {
-    if (!isset($request->payload()->username)) {
-        return Response::abort('Requires username or email');
+
+/**
+ * ===================================================================
+ * Email and Username
+ * Allows either email and username to be used for
+ * authentication
+ *
+ */
+
+$email    = $request->payload()->email ?? null;
+$username = $request->payload()->username ?? null;
+$psql     = [];
+
+if (null==$email) {
+    if (null==$username) {
+        # Abort when there is no email and username payload
+        Response::abort('Requires username or email');
     }
-    $key   = 'username';
-    $value = $request->payload()->username;
-    if (!Validator::isCorrectData('alphanum',$value)) {
+    $psql['whereKey'] = 'username';
+    # Validates username input
+    if (!Validator::isCorrectData('alphanum',$username)) {
         Response::abort('Invalid username');
     }
+    $psql['whereValue'] = $username;
 }
 else {
-    $key   = 'email';
-    $value = $request->payload()->email;
-    if (!Validator::isCorrectData('email',$value)) {
+    $psql['whereKey'] = 'email';
+    if (!Validator::isCorrectData('email',$email)) {
         Response::abort('Invalid email');
     }
+    $psql['whereValue'] = $email;
 }
 
-$where['whereKey']   = $key;
-$where['whereValue'] = $value;
 
-if (!isset($request->payload()->password)) {
-    return Response::abort('Requires password');
-}
+/**
+ * ===================================================================
+ * User Password
+ *
+ */
+$password = $request->payload()->password ?? null;
+if (null==$password) Response::abort('Requires password');
 
 # Checking user data from the user primary database
 $sqlQuery = new PsqlBuilder();
 $sqlQuery->use('users/user.auth')
-         ->data($where);
+         ->data($psql);
 $result = Database::get($sqlQuery->build());
 
 # Checking if the user exists
@@ -58,14 +75,13 @@ if (!$result['hasRecord']) {
 }
 
 # Verify password
-if (!password_verify($request->payload()->password,$result['password'])) {
+if (!password_verify($password,$result['password'])) {
     Response::unauthorized();
 }
 
 # Checking user profile
 $where['whereKey']   = 'user_id';
 $where['whereValue'] = $result['user_id'];
-
 
 $sqlQuery = new PsqlBuilder();
 $sqlQuery->use('users/get/user.get.profile')

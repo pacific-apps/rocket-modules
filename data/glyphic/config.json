@@ -4,5 +4,10 @@
 
         }
     },
+    "defaults":{
+        "tennants":{
+            "users":1000
+        }
+    }
     "local_data_path":"/data/glyphic"
 }

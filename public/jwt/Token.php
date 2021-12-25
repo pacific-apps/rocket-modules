@@ -11,7 +11,6 @@ class Token extends Validator {
 
     public static function create(array $payload)
     {
-        JWTAbstract::loadEnvSecret();
         $generate = new Generator();
         $payload['exp'] = ((new \DateTime())->modify('+10 minutes')->getTimestamp());
         return $generate->setPayload($payload)->generateToken();
@@ -19,7 +18,6 @@ class Token extends Validator {
 
     public static function verify(string $token)
     {
-        JWTAbstract::loadEnvSecret();
         return Validator::token($token);
     }
 

@@ -7,6 +7,8 @@ use \core\http\Response;
 
 class Config {
 
+    private $config = [];
+
     public function __construct()
     {
         try {
@@ -14,9 +16,10 @@ class Config {
             if (!file_exists($path)) {
                 throw new \Exception('Glyphic config not found at: '.$path, 1);
             }
-            $config = json_decode(file_get_contents(ROOT.'/data/glyphic/config.json'),TRUE);
+            $this->config = json_decode(file_get_contents(ROOT.'/data/glyphic/config.json'),TRUE);
         } catch (\Exception $e) {
             Response::error('Internal Server Error');
         }
     }
+
 }
