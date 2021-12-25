@@ -43,7 +43,7 @@ class Token extends Validator {
 
         $parts = explode('.', $this->token);
         if (!isset($parts[1])) return [];
-        return json_decode($base64_decode($parts[1]),TRUE);
+        return json_decode(base64_decode($parts[1]),TRUE);
 
     }
 
