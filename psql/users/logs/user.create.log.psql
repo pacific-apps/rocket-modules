@@ -1,5 +1,0 @@
-INSERT INTO tk_users_logs (
-    user_id, log_id, log_type, log_by, log_at
-) VALUES (
-    '{{userId}}', '{{logId}}', '{{logType}}', '{{logBy}}', '{{logAt}}'
-)

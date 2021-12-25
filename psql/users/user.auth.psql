@@ -1,5 +1,0 @@
-SELECT *
-FROM
-tk_users_primary
-WHERE
-{{whereKey}} = '{{whereValue}}'

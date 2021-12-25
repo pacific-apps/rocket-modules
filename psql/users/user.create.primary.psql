@@ -1,5 +1,0 @@
-INSERT INTO tk_users_primary (
-    user_id, created_at, activated_at, email, role, permissions, password, username, status
-) VALUES (
-    '{{userId}}', '{{createdAt}}', '{{activatedAt}}', '{{email}}', '{{role}}', '{{permissions}}', '{{password}}','{{username}}','{{status}}'
-)

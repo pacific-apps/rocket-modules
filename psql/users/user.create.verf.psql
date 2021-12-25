@@ -1,5 +1,0 @@
-INSERT INTO tk_users_verf (
-    user_id, verf_key, verf_for, valid_until, is_completed
-) VALUES (
-    '{{userId}}', '{{verificationKey}}', '{{verificationFor}}', '{{validUntil}}', '{{isCompleted}}'
-)

@@ -1,5 +1,0 @@
-INSERT INTO tk_users_address (
-    user_id, address_label, address_number, address_line_1, address_line_2, barangay, city, town, provice, state, region, zipcode, address_group, address_type
-) VALUES (
-    '{{userId}}', '{{addressLabel}}', '{{addressNumber}}', '{{addressLine1}}', '{{addressLine2}}', '{{barangay}}', '{{city}}','{{town}}', '{{province}}', '{{state}}', '{{region}}', '{{zipcode}}', '{{addressGroup}}', '{{addressType}}'
-)

@@ -52,8 +52,7 @@ class Generator extends JWTAbstract{
     * @return string
     */
     protected function getSecret() {
-        return getenv('APP_SECRET');
-        //return $this->secret;
+        return getenv('JWT_SECRET');
     }
 
     /**
@@ -99,8 +98,8 @@ class Generator extends JWTAbstract{
     */
     public function generateToken()
     {
-        $base64UrlHeader = $this->base64UrlEncode($this->getHeader());
-        $base64UrlPayload = $this->base64UrlEncode($this->getPayload());
+        $base64UrlHeader    = $this->base64UrlEncode($this->getHeader());
+        $base64UrlPayload   = $this->base64UrlEncode($this->getPayload());
         $base64UrlSignature = $this->base64UrlEncode($this->getSignature($base64UrlHeader, $base64UrlPayload));
 
         $this->setToken("{$base64UrlHeader}.{$base64UrlPayload}.{$base64UrlSignature}");
@@ -149,10 +148,10 @@ class Generator extends JWTAbstract{
             return self::TOKEN_EXPIRED;
         }
 
-    // build signature from header and payload
-        $base64UrlHeader = $this->base64UrlEncode($tokenHeader);
-        $base64UrlPayload = $this->base64UrlEncode($tokenPayload);
-        $signature = $this->getSignature($base64UrlHeader, $base64UrlPayload);
+        // build signature from header and payload
+        $base64UrlHeader    = $this->base64UrlEncode($tokenHeader);
+        $base64UrlPayload   = $this->base64UrlEncode($tokenPayload);
+        $signature          = $this->getSignature($base64UrlHeader, $base64UrlPayload);
         $base64UrlSignature = $this->base64UrlEncode($signature);
 
         if (($base64UrlSignature === $signatureProvided) === false) {
