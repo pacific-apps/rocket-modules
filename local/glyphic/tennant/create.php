@@ -12,20 +12,11 @@ use \glyphic\tools\MySQLQueryBuilder;
 use \glyphic\tools\MySQLDatabase;
 use \glyphic\tools\IdGenerator;
 use \glyphic\tools\DateManager;
+use \glyphic\tools\TypeOf;
 
 Accept::method('POST');
 Accept::payload([
-    'token',
-    'firstname',
-    'lastname',
-    'registeredname',
-    'lob',
-    'productcategory',
-    'businessemail',
-    'businessphone',
-    'addressLine1',
-    'city',
-    'country'
+    'token'
 ]);
 
 $request  = new Request;
@@ -77,26 +68,12 @@ $query = new MySQLQueryBuilder(
 //     query: $query->build()
 // );
 
-
-/**
- * All Business Related Data for the Tennant
- */
-$business = [
-    'firstName' => TypeOf::alpha('firstname'),
-    'lastName' => TypeOf::alpha('lastname'),
-    'registeredName' => TypeOf::alpha('registeredname'),
-    'lineOfBusiness' => TypeOf::alpha('lob'),
-    'productCategory' => TypeOf::alpha('productcategory'),
-    'businessEmail' => TypeOf::email('businessemail'),
-    'businessPhone' => TypeOf::phone('businessphone'),
-    'addressLine1' => TypeOf::address('addressLine1'),
-    'city' => TypeOf::alpha('city'),
-    'county' => TypeOf::country('country')
-];
-
 Response::transmit([
     'code' => 200,
     'payload' => [
-        'message' => 'Tennant has been created'
+        'message' => 'Tennant has been created',
+        'tennantId' => $tennant['id'],
+        'publicKey' => $tennant['publicKey'],
+        'privateKey' => $tennant['privateKey']
     ]
 ]);

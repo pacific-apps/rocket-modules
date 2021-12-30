@@ -33,7 +33,6 @@ class MySQLDatabase {
         }
 
         if (null===$flag) {
-            echo "string";
             return $data;
         }
 
