@@ -15,6 +15,7 @@ use \core\http\Accept;
 use \jwt\Token;
 use \glyphic\tools\MySQLQueryBuilder;
 use \glyphic\tools\MySQLDatabase;
+use \glyphic\tools\TypeOf;
 
 $request  = new Request;
 $response = new Response;
@@ -28,7 +29,10 @@ $config = get_glyphic_config();
 
 $query = [
     'tableName' => $config['tables_aka']['main_tennants'],
-    'tennantId' => $request->payload()->id
+    'tennantId' => TypeOf::alphanum(
+        'Id ',
+        $request->payload()->id
+        )
 ];
 
 $query = new MySQLQueryBuilder(

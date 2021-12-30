@@ -64,9 +64,9 @@ $query = new MySQLQueryBuilder(
     $tennant
 );
 
-// $result = MySQLDatabase::save(
-//     query: $query->build()
-// );
+$result = MySQLDatabase::save(
+    query: $query->build()
+);
 
 Response::transmit([
     'code' => 200,

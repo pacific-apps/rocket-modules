@@ -17,6 +17,17 @@ class TypeOf
         return htmlspecialchars($data, ENT_QUOTES, 'UTF-8');
     }
 
+    public static function alphanum (
+        string $label,
+        $data
+        )
+    {
+        if (!preg_match('/^[a-zA-Z0-9]+$/', $data)) {
+            Response::abort("Invalid data type: {$label}");
+        }
+        return htmlspecialchars($data, ENT_QUOTES, 'UTF-8');
+    }
+
     public static function all (
         string $label,
         $data
