@@ -41,6 +41,10 @@ if (!$result['hasRecord']) {
     Response::unknown('Tennant not found');
 }
 
+if ($result['status']!=='ACTIVE') {
+    Response::unauthorized('Account has been disabled');
+}
+
 if ($result['publicKey']!==$request->payload()->public) {
     Response::unauthorized('Invalid public or private key');
 }
