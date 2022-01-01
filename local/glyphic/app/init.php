@@ -10,6 +10,7 @@ use \core\http\Accept;
 use \jwt\Token;
 use \glyphic\tools\MySQLQueryBuilder;
 use \glyphic\tools\MySQLDatabase;
+use \glyphic\tools\PDOQuery;
 
 $request = new Request;
 $response = new Response;
@@ -47,30 +48,35 @@ if (file_exists($init)) {
     );
 }
 
-$query = new MySQLQueryBuilder('tables/do.exist',([
-    'dbName' => getenv('GLYPHIC_DATABASE'),
-    'tableName' => 'glyf_init'
-]));
+try {
 
-$result = MySQLDatabase::get(
-    query: $query->build(),
-    flag: '--OBJECT'
-);
+    $query = new PDOQuery('tables/do.exist');
+    $query->param(':dbName',getenv('GLYPHIC_DATABASE'));
+    $query->param(':tableName','glyf_init');
+    $result = $query->get();
 
-if ($result->hasRecord) {
-    Response::abort(
-        'Glyphic instance exists'
-    );
+    if ($result['hasRecord']) {
+        Response::abort('Glyphic instance exists');
+    }
+
+} catch (\PDOException $e) {
+    Response::error();
+    exit();
 }
 
 # Instantiates the application
 file_put_contents(ROOT.'/data/glyphic/init.txt','');
 
 # Creating the init table
-$query = new MySQLQueryBuilder('tables/init.glyf',[]);
-MySQLDatabase::save(
-    $query->build()
-);
+try {
+    $query = new PDOQuery('tables/init.glyf');
+    $query->post();
+
+} catch (\PDOException $e) {
+    Response::error();
+    exit();
+}
+
 
 # Prepare table aliases
 require ROOT.'/data/glyphic/config.php';
@@ -81,12 +87,8 @@ foreach ($initTables as $tableNames) {
     if ($tableNames!=='.'&&$tableNames!=='..') {
         list($tableName,$value) = explode('.',$tableNames,2);
         # Executing the query for each init SQL files
-        $query = new MySQLQueryBuilder("init/{$tableName}",[
-            'tableName' => $tableAlias[$tableName]
-        ]);
-        MySQLDatabase::save(
-            $query->build()
-        );
+        $query = new PDOQuery("init/{$tableName}");
+        $query->post();
     }
 }
 

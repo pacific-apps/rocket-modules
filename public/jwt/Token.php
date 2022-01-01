@@ -11,12 +11,14 @@ class Token extends Validator {
 
     private $token;
     private $payload;
+    private $exp;
 
     public function __construct(
         string $token = null
         )
     {
         $this->token = $token;
+        $this->exp = null;
     }
 
     public function get()
@@ -59,29 +61,5 @@ class Token extends Validator {
         $this->token          = $generate->setPayload($this->payload)->generateToken();
         return $this->token;
     }
-
-    //
-    // public static function create(array $payload)
-    // {
-    //     $generate       = new Generator();
-    //     $payload['exp'] = ((new \DateTime())->modify('+10 minutes')->getTimestamp());
-    //     return $generate->setPayload($payload)->generateToken();
-    // }
-    //
-    // public static function verify(string $token)
-    // {
-    //     return Validator::token($token);
-    // }
-    //
-    // public static function getPayload(string $token)
-    // {
-    //     $tokenParts = explode('.', $token);
-    //
-    //     if (!isset($tokenParts[1])) return [];
-    //     $tokenPayload = base64_decode($tokenParts[1]);
-    //
-    //     return json_decode($tokenPayload,TRUE);
-    //
-    // }
 
 }

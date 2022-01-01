@@ -1,0 +1,3 @@
+UPDATE m_glyf_user
+SET status = 'ACTIVE', activatedAt = :activationDate
+WHERE userId = :userId

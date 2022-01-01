@@ -1,0 +1,5 @@
+SELECT * FROM m_glyf_user u
+LEFT JOIN s_glyf_profile p ON u.userId = p.userId
+WHERE u.tennantId IN (SELECT tennantId FROM m_glyf_tnt WHERE publicKey = :publicKey )
+AND u.email = :email
+OR u.username = :username

@@ -34,12 +34,12 @@ class MySQLQueryBuilder
         )
     {
         $this->data = $data;
-        $this->data['setArguments'] = $this->setArguments;
         return $this;
     }
 
     public function build()
     {
+        $this->data['setArguments'] = $this->setArguments;
         return $this->parse(
             $this->data,
             file_get_contents($this->psqlPath.'.psql')
@@ -76,7 +76,7 @@ class MySQLQueryBuilder
             if ($i>0) {
                 $tmp = $tmp.', ';
             }
-            $tmp = $tmp.$key.'='.$value;
+            $tmp = $tmp.$key.' = '.$value;
             $i++;
         }
         $this->setArguments = $tmp;

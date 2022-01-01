@@ -16,4 +16,14 @@ class DateManager
         );
         return $date->format($format);
     }
+
+    public static function add(
+        string $date,
+        string $addParam
+        )
+    {
+        return (new \DateTime($date))
+                ->modify("+{$addParam}")
+                ->format("Y-m-d H:i:s");
+    }
 }

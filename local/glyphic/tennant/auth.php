@@ -16,6 +16,7 @@ use \jwt\Token;
 use \glyphic\tools\MySQLQueryBuilder;
 use \glyphic\tools\MySQLDatabase;
 use \glyphic\tools\TypeOf;
+use \glyphic\tools\PDOQuery;
 
 $request  = new Request;
 $response = new Response;
@@ -27,20 +28,24 @@ ACCEPT::payload(['id','public','private','grant_type=client_credentials']);
 require ROOT.'/data/glyphic/config.php';
 $config = get_glyphic_config();
 
-$query = [
-    'tableName' => $config['tables_aka']['main_tennants'],
-    'tennantId' => TypeOf::alphanum(
-        'Id ',
-        $request->payload()->id
-        )
-];
+try {
 
-$query = new MySQLQueryBuilder(
-    'tennants/get/tennant',
-    $query
-);
+    $query = new PDOQuery('tennants/get/tennant');
+    $query->param(
+        ':tennantId',
+        TypeOf::alphanum(
+            'Tennant Id',
+            $request->payload()->id
+            )
+    );
+    $result = $query->get();
 
-$result = MySQLDatabase::get($query->build());
+} catch (\PDOException $e) {
+    Response::error();
+    exit();
+}
+
+
 if (!$result['hasRecord']) {
     Response::unknown('Tennant not found');
 }

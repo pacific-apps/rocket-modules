@@ -53,15 +53,43 @@ class TypeOf
         )
     {
         if (!str_contains($data,'@')) {
-            Response::abort("Invalid email format: {$label}::{$data}");
+            Response::abort("Invalid email format: {$data}");
         }
         if (!str_contains($data,'.')) {
-            Response::abort("Invalid email format: {$label}::{$data}");
+            Response::abort("Invalid email format: {$data}");
         }
         if (!preg_match('/^[a-zA-Z0-9.@]+$/', $data)) {
-            Response::abort("Invalid email format: {$label}");
+            Response::abort("Invalid email format: {$data}");
         }
         return htmlspecialchars($data, ENT_QUOTES, 'UTF-8');
+    }
+
+    public static function escaped(
+        string $label,
+        $data
+        )
+    {
+        $escs = Self::getEsc();
+        foreach ($escs as $esc => $val) {
+            $data = str_replace($esc,$val,$data);
+        }
+        return $data;
+    }
+
+
+    public static function getEsc()
+    {
+        return [
+            ";"=>"8H16QGu",
+            "'"=>"rNVtfST",
+            "/"=>"fkQiGMt",
+            "\/"=>"COZoVaT",
+            '"'=>"6ReKoZm",
+            "."=>"CdRWWZ3",
+            ","=>"nPybl1A",
+            "="=>"uo0HjRg",
+            "-"=>"pRYg95l"
+        ];
     }
 
     public static function isAlphanum( $data ) {

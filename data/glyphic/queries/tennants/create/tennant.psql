@@ -1,0 +1,5 @@
+INSERT INTO m_glyf_tnt (
+    tennantId, publicKey, privateKey, createdAt, podId, domain, status
+) VALUES (
+    :tennantId, :publicKey, :privateKey, :createdAt, :podId, :domain, :status
+)

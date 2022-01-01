@@ -13,6 +13,7 @@ use \glyphic\tools\MySQLDatabase;
 use \glyphic\tools\IdGenerator;
 use \glyphic\tools\DateManager;
 use \glyphic\tools\TypeOf;
+use \glyphic\tools\PDOQuery;
 
 Accept::method('POST');
 Accept::payload([
@@ -48,25 +49,51 @@ if (!isset($payload['requester'])&&$payload['requester']!=='root') {
 require ROOT.'/data/glyphic/config.php';
 $config = get_glyphic_config();
 
-# Primary Data Fields
-$date                  = DateManager::now('Y-m-d H:i:s');
-$tennant['tableName']  = $config['tables_aka']['main_tennants'];
-$tennant['id']         = IdGenerator::create32bitKey(IdGenerator::BETANUMERIC);
-$tennant['publicKey']  = IdGenerator::create32bitKey(IdGenerator::ALPHANUMERIC);
+$tennant['id'] = IdGenerator::create32bitKey(IdGenerator::BETANUMERIC);
+$tennant['publicKey'] = IdGenerator::create32bitKey(IdGenerator::ALPHANUMERIC);
 $tennant['privateKey'] = IdGenerator::create32bitKey(IdGenerator::ALPHANUMERIC);
-$tennant['createdAt']  = $date;
-$tennant['status']     = $config['default_status']['tennant'];
-$tennant['podId']      = $config['current_pod_id'];
-$tennant['domain']     = $config['instance_domain'];
 
-$query = new MySQLQueryBuilder(
-    'tennants/create/new_tennant',
-    $tennant
-);
+try {
 
-$result = MySQLDatabase::save(
-    query: $query->build()
-);
+    # Primary Data Fields
+    $query = new PDOQuery('tennants/create/tennant');
+    $query->param(
+        ':tennantId',
+        $tennant['id']
+    );
+    $query->param(
+        ':publicKey',
+        $tennant['publicKey']
+    );
+    $query->param(
+        ':privateKey',
+        $tennant['privateKey']
+    );
+    $query->param(
+        ':createdAt',
+        DateManager::now('Y-m-d H:i:s')
+    );
+    $query->param(
+        ':status',
+        $config['default_status']['tennant']
+    );
+    $query->param(
+        ':podId',
+        $config['current_pod_id']
+    );
+    $query->param(
+        ':domain',
+        $config['instance_domain']
+    );
+
+    $query->post();
+
+} catch (\PDOException $e) {
+    Response::error();
+    exit();
+}
+
+
 
 Response::transmit([
     'code' => 200,
