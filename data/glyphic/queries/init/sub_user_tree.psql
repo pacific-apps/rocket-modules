@@ -4,6 +4,6 @@ CREATE TABLE s_glyf_user_tree (
     parentOfId VARCHAR(64) NOT NULL,
     siblingOfIds VARCHAR(64) NOT NULL,
     childOfId VARCHAR(32) NOT NULL,
-    tennantId VARCHAR(32) NOT NULL,
+    tenantId VARCHAR(32) NOT NULL,
     recordType VARCHAR(32) NOT NULL
 );

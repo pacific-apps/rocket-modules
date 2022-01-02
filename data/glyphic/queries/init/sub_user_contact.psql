@@ -9,6 +9,6 @@ CREATE TABLE s_glyf_user_cnt (
     faxNumber VARCHAR(32),
     emerContPerson VARCHAR(64),
     emerContNumber VARCHAR(32),
-    tennantId VARCHAR(32) NOT NULL,
+    tenantId VARCHAR(32) NOT NULL,
     recordType VARCHAR(32) NOT NULL
 );

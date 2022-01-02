@@ -4,6 +4,6 @@ CREATE TABLE s_glyf_user_actrk (
     actionType VARCHAR(32) NOT NULL,
     createdAt VARCHAR(32) NOT NULL,
     toExpireAt VARCHAR(32) NOT NULL,
-    tennantId VARCHAR(32) NOT NULL,
+    tenantId VARCHAR(32) NOT NULL,
     recordType VARCHAR(32) NOT NULL
 );

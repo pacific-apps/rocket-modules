@@ -31,6 +31,7 @@ if (!$jwt->isValid()) {
 }
 
 $requester    = $jwt->payload();
+
 $setArguments = [];
 $prepareArguments = [
     ':publicKey' => TypeOf::alphanum(
@@ -59,11 +60,48 @@ if (isset($request->payload()->profile->lastname)) {
     );
 }
 
-if (isset($request->payload()->profile->middlename)) {
+if (property_exists($request->payload()->profile,'middlename')) {
     $setArguments['middleName'] = ':middleName';
     $prepareArguments[':middleName'] = TypeOf::alpha(
         'Middle name',
-        $request->payload()->profile->middlename ?? null
+        $request->payload()->profile->middlename ?? null,
+        'NULLABLE'
+    );
+}
+
+if (property_exists($request->payload()->profile,'nametitle')) {
+    $setArguments['nameTitle'] = ':nameTitle';
+    $prepareArguments[':nameTitle'] = TypeOf::alpha(
+        'Name title',
+        $request->payload()->profile->nametitle ?? null,
+        'NULLABLE'
+    );
+}
+
+if (property_exists($request->payload()->profile,'suffix')) {
+    $setArguments['suffix'] = ':suffix';
+    $prepareArguments[':suffix'] = TypeOf::alpha(
+        'Name suffix',
+        $request->payload()->profile->suffix ?? null,
+        'NULLABLE'
+    );
+}
+
+if (property_exists($request->payload()->profile,'gender')) {
+    $setArguments['gender'] = ':gender';
+    $prepareArguments[':gender'] = TypeOf::alpha(
+        'Gender',
+        $request->payload()->profile->gender ?? null,
+        'NULLABLE'
+    );
+}
+
+if (property_exists($request->payload()->profile,'profilephoto')) {
+    $setArguments['profilePhoto'] = ':profilePhoto';
+    $prepareArguments[':profilePhoto'] = TypeOf::url(
+        'Profile Photo',
+        $request->payload()->profile->profilephoto ?? null,
+        'NULLABLE'
     );
 }
 
@@ -73,7 +111,7 @@ $queryBuilder->set($setArguments);
 try {
     $query = new PDOQuery($queryBuilder->build(),TRUE);
     $query->prepare($prepareArguments);
-    $query->post();
+    //$query->post();
 } catch (\Exception $e) {
 
 }

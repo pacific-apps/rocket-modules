@@ -1,1 +1,0 @@
-SELECT * FROM m_glyf_tnt WHERE tennantId = :tennantId LIMIT 1

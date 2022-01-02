@@ -1,32 +1,18 @@
 <?php
 
-namespace glyphic\tools;
+declare(strict_types=1);
+namespace glyphic;
 
-class PDOQuery {
-
-    private $pSqlPath;
-    private $pdoDriver;
-    private $pdoStatement;
+class PDOQueryController
+{
 
     public function __construct(
-        string $pSqlFile,
-        bool $isQueryString = false
+        string $pSqlQueryString
         )
     {
-        $this->pSqlPath  = ROOT."/data/glyphic/queries/{$pSqlFile}.psql";
         $this->pdoDriver = new \PDO("mysql:host=".getenv('GLYPHIC_HOST').";dbname=".getenv('GLYPHIC_DATABASE'), getenv('GLYPHIC_USERNAME'), getenv('GLYPHIC_PASSWORD'));
         $this->pdoDriver->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-
-        if (!$isQueryString) {
-            if (!file_exists($this->pSqlPath)) {
-                throw new \Exception("Unable to locate psql file: {$this->pSqlPath}");
-            }
-            $this->pdoStatement = $this->pdoDriver->prepare(file_get_contents($this->pSqlPath));
-        }
-        else {
-            $this->pdoStatement = $this->pdoDriver->prepare($pSqlFile);
-        }
-
+        $this->pdoStatement = $this->pdoDriver->prepare($pSqlQueryString);
     }
 
     public function param(
@@ -69,5 +55,8 @@ class PDOQuery {
             return $result[0];
         }
     }
+
+
+
 
 }

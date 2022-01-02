@@ -8,6 +8,6 @@ CREATE TABLE m_glyf_user (
     activatedAt VARCHAR(32),
     role VARCHAR(32) NOT NULL,
     permissions VARCHAR(64) NOT NULL,
-    tennantId VARCHAR(32) NOT NULL,
+    tenantId VARCHAR(32) NOT NULL,
     status VARCHAR(32) NOT NULL
 );

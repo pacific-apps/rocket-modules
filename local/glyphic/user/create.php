@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 /**
  * Handles user creation
- * @param string token - should be retrieved using the tennant api
- * @param array profile details
+ * @param string publickey - The tenant's public key
+ * @param array user - new user profile details
  */
 
 
@@ -14,13 +14,62 @@ use \core\http\Request;
 use \core\http\Response;
 use \core\http\Accept;
 use \jwt\Token;
-use \glyphic\tools\TypeOf;
-use \glyphic\tools\PDOQuery;
-use \glyphic\tools\IDGenerator;
-use \glyphic\tools\DateManager;
+use \core\exceptions\UnauthorizedAccessException;
+use \core\exceptions\BadRequestException;
+use \core\exceptions\AlreadyExistsException;
+use \core\exceptions\ResourceAccessForbiddenException;
+use \glyphic\RequireApiEndpoint;
+use \glyphic\models\User;
+use \glyphic\models\Tenant;
+use \glyphic\TypeOf;
+
 
 $request = new Request;
 $response = new Response;
+
+try {
+
+    RequireApiEndpoint::method('POST');
+    RequireApiEndpoint::payload([
+        'publickey',
+        'userdetails'
+    ]);
+
+    $requester = [
+        'permissions' => 'WEB'
+    ];
+
+    $tenant = new Tenant(
+        TypeOf::alphanum(
+            'Public Key',
+            $request->payload()->publickey ?? null
+        )
+    );
+
+    if ($requester['permissions']==='WEB'&&$tenant->getStatus()!=='ACTIVE') {
+        throw new ResourceAccessForbiddenException(
+            'Tenant is not active'
+        );
+    }
+
+    $user = new User($tenant->getTenantId());
+
+
+
+} catch (\Exception $e) {
+    if ($e instanceof \core\exceptions\RocketExceptionsInterface) {
+        Response::transmit([
+            'code' => $e->code(),
+            'exception' => 'RocketExceptionsInterface::'.$e->exception()
+        ]);
+        exit();
+    }
+    Response::transmit([
+        'code' => 400,
+        'exception' => $e->getMessage()
+    ]);
+}
+
 
 /**
  * 1. Defining Pre-requisites for this endpoint
@@ -28,17 +77,9 @@ $response = new Response;
  * and requires token and profile payload
  */
 
+/*
 Accept::method('POST');
-Accept::payload(['token','profile']);
-
-$token = $request->payload()->token;
-$jwt = new Token($token);
-
-if (!$jwt->isValid()) {
-    Response::unauthorized(
-        'Token is invalid'
-    );
-}
+Accept::payload(['publicKey','user']);
 
 $password = $request->payload()->profile->password ?? null;
 if (null===$password) {
@@ -46,6 +87,8 @@ if (null===$password) {
 }
 
 # Get Tennant Id
+$tennant = new PDOQuery('tennats/get/tennant.id');
+#$tennant->prepare();
 $tennantId = $jwt->payload()['tid'];
 
 try {
@@ -118,3 +161,5 @@ Response::transmit([
         'verificationKey' => $verificationKey
     ]
 ]);
+
+*/

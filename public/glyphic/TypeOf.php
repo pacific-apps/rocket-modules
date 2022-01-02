@@ -1,65 +1,125 @@
 <?php
 
-namespace glyphic\tools;
-use \core\http\Response;
+namespace glyphic;
+use \core\exceptions\BadRequestException;
 
 class TypeOf
 {
 
     public static function alpha (
         string $label,
-        $data
+        $data,
+        string $flag = null
         )
     {
+        if ($flag==='NULLABLE'&&null===$data) {
+            return null;
+        }
+
         if (!preg_match('/^[a-zA-Z]+$/', $data)) {
-            Response::abort("Invalid data type: {$label}");
+            throw new BadRequestException (
+                'Invalid Data Type: '.$label
+            );
         }
         return htmlspecialchars($data, ENT_QUOTES, 'UTF-8');
     }
 
     public static function alphanum (
         string $label,
-        $data
+        $data,
+        string $flag = null
         )
     {
+
+        if ($flag==='NULLABLE'&&null===$data) {
+            return null;
+        }
+
         if (!preg_match('/^[a-zA-Z0-9]+$/', $data)) {
-            Response::abort("Invalid data type: {$label}");
+            throw new BadRequestException (
+                'Invalid Data Type: '.$label
+            );
         }
         return htmlspecialchars($data, ENT_QUOTES, 'UTF-8');
     }
 
     public static function all (
         string $label,
-        $data
+        $data,
+        string $flag = null
         )
     {
+
+        if ($flag==='NULLABLE'&&null===$data) {
+            return null;
+        }
+
         return htmlspecialchars($data, ENT_QUOTES, 'UTF-8');
     }
 
     public static function integer (
         string $label,
-        $data
+        $data,
+        string $flag = null
         )
     {
+
+        if ($flag==='NULLABLE'&&null===$data) {
+            return null;
+        }
+
         if (!is_numeric($data)) {
-            Response::abort("Invalid data type: {$label}");
+            throw new BadRequestException (
+                'Invalid Data Type: '.$label
+            );
         }
         return (int)$data;
     }
 
-    public static function email (
+    public static function url (
         string $label,
-        $data
+        $data,
+        string $flag = null
         )
     {
+
+        if ($flag==='NULLABLE'&&null===$data) {
+            return null;
+        }
+
+        if (!filter_var($data, FILTER_VALIDATE_URL)) {
+            throw new BadRequestException (
+                'Invalid Data Type: '.$label
+            );
+        }
+
+        return $data;
+    }
+
+    public static function email (
+        string $label,
+        $data,
+        string $flag = null
+        )
+    {
+        if ($flag==='NULLABLE'&&null===$data) {
+            return null;
+        }
+
         if (!str_contains($data,'@')) {
-            Response::abort("Invalid email format: {$data}");
+            throw new BadRequestException (
+                'Invalid Data Type: '.$label
+            );
         }
         if (!str_contains($data,'.')) {
-            Response::abort("Invalid email format: {$data}");
+            throw new BadRequestException (
+                'Invalid Data Type: '.$label
+            );
         }
         if (!preg_match('/^[a-zA-Z0-9.@]+$/', $data)) {
-            Response::abort("Invalid email format: {$data}");
+            throw new BadRequestException (
+                'Invalid Data Type: '.$label
+            );
         }
         return htmlspecialchars($data, ENT_QUOTES, 'UTF-8');
     }

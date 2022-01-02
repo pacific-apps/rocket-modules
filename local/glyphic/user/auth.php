@@ -84,6 +84,7 @@ if (!password_verify(
 $token = new Token();
 $token->payload([
     'userId' => $user['userId'],
+    'permissions' => $user['permissions'],
     'publicKey' => $request->payload()->publickey
 ]);
 

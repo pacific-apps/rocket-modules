@@ -7,90 +7,92 @@ require $_SERVER['DOCUMENT_ROOT'].'/imports.php';
 use \core\http\Request;
 use \core\http\Response;
 use \core\http\Accept;
+use \core\exceptions\UnauthorizedAccessException;
+use \core\exceptions\BadRequestException;
+use \core\exceptions\AlreadyExistsException;
 use \jwt\Token;
-use \glyphic\tools\MySQLQueryBuilder;
-use \glyphic\tools\MySQLDatabase;
-use \glyphic\tools\PDOQuery;
+use \glyphic\RequireApiEndpoint;
+use \glyphic\models\Table;
 
 $request = new Request;
 $response = new Response;
 
-# Specifying this api call's request method, payload, and query params
-ACCEPT::method('POST');
-ACCEPT::payload(['token']);
-
-$token = $request->payload()->token ?? null;
-if (null==$token) {
-    Response::abort(
-        'Requires Token Payload'
-    );
-}
-
-$jwt = new Token($token);
-
-if (!$jwt->isValid()) {
-    Response::unauthorized(
-        'Token is invalid'
-    );
-}
-
-$payload = $jwt->payload();
-if (!isset($payload['requester'])&&$payload['requester']!=='root') {
-    Response::unauthorized(
-        'Token is invalid'
-    );
-}
-
-$init = ROOT.'/data/glyphic/init.txt';
-if (file_exists($init)) {
-    Response::abort(
-        'Glyphic instance exists'
-    );
-}
-
 try {
 
-    $query = new PDOQuery('tables/do.exist');
-    $query->param(':dbName',getenv('GLYPHIC_DATABASE'));
-    $query->param(':tableName','glyf_init');
-    $result = $query->get();
+    RequireApiEndpoint::method('POST');
+    RequireApiEndpoint::payload([
+        'token'
+    ]);
 
-    if ($result['hasRecord']) {
-        Response::abort('Glyphic instance exists');
+
+    $jwt = new Token($request->payload()->token);
+
+    if (!$jwt->isValid()) {
+        throw new UnauthorizedAccessException(
+            'Token provided is either expired or invalid'
+        );
     }
 
-} catch (\PDOException $e) {
-    Response::error();
-    exit();
-}
-
-# Instantiates the application
-file_put_contents(ROOT.'/data/glyphic/init.txt','');
-
-# Creating the init table
-try {
-    $query = new PDOQuery('tables/init.glyf');
-    $query->post();
-
-} catch (\PDOException $e) {
-    Response::error();
-    exit();
-}
-
-
-# Prepare table aliases
-require ROOT.'/data/glyphic/config.php';
-$tableAlias = get_glyphic_config()['tables_aka'];
-
-$initTables = scandir(ROOT.'/data/glyphic/queries/init');
-foreach ($initTables as $tableNames) {
-    if ($tableNames!=='.'&&$tableNames!=='..') {
-        list($tableName,$value) = explode('.',$tableNames,2);
-        # Executing the query for each init SQL files
-        $query = new PDOQuery("init/{$tableName}");
-        $query->post();
+    $payload = $jwt->payload();
+    if (!isset($payload['requester'])&&$payload['requester']!=='root') {
+        throw new UnauthorizedAccessException(
+            'Token provided is either expired or invalid'
+        );
     }
-}
 
-# Creating the init table
-Response::transmit([200]);
+    $init = ROOT.'/data/glyphic/init.txt';
+    if (file_exists($init)) {
+        throw new AlreadyExistsException(
+            'Glyphic instance exists'
+        );
+    }
+
+    try {
+        $table = new Table('glyf_init','GET');
+        if ($table->doExist()) {
+            throw new AlreadyExistsException(
+                'Glyphic instance exists'
+            );
+        }
+    } catch (\PDOException $e) {
+        Response::error();
+        exit();
+    }
+
+    # Initializing the tables
+    $initTables = scandir(ROOT.'/data/glyphic/queries/init');
+
+    try {
+        foreach ($initTables as $tableNames) {
+            if ($tableNames!=='.'&&$tableNames!=='..') {
+                list($tableName,$value) = explode('.',$tableNames,2);
+                # Executing the query for each init SQL files
+                $table = new Table($tableName);
+                $table->create("init/{$tableName}");
+            }
+        }
+    } catch (\PDOException $e) {
+        Response::error();
+        exit();
+    }
+
+    # Instantiates the application
+    file_put_contents(ROOT.'/data/glyphic/init.txt','');
+
+    # Finally, responding 200 OK
+    Response::transmit([200]);
+
+
+} catch (\Exception $e) {
+    if ($e instanceof \core\exceptions\RocketExceptionsInterface) {
+        Response::transmit([
+            'code' => $e->code(),
+            'exception' => 'RocketExceptionsInterface::'.$e->exception()
+        ]);
+        exit();
+    }
+    Response::transmit([
+        'code' => 400,
+        'exception' => 'Unhandled Exception'
+    ]);
+}

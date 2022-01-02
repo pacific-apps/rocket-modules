@@ -15,6 +15,6 @@ CREATE TABLE s_glyf_user_adrs (
     island VARCHAR(32),
     country VARCHAR(32),
     zipcode VARCHAR(32),
-    tennantId VARCHAR(32) NOT NULL,
+    tenantId VARCHAR(32) NOT NULL,
     recordType VARCHAR(32) NOT NULL
 );
