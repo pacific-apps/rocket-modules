@@ -40,28 +40,6 @@ class Tenant {
 
     }
 
-    public function create()
-    {
-
-        $this->tenantId = UniqueId::create32bitKey(UniqueId::BETANUMERIC);
-        $this->publicKey = UniqueId::create32bitKey(UniqueId::ALPHANUMERIC);
-        $this->privateKey = UniqueId::create32bitKey(UniqueId::ALPHANUMERIC);
-
-        $query = new PDOQueryController(
-            (new QueryBuilder('/tenants/create/tenant'))->build()
-        );
-        $query->prepare([
-            ':tenantId' => $this->tenantId,
-            ':publicKey' => $this->publicKey,
-            ':privateKey' => $this->privateKey,
-            ':createdAt' => TimeStamp::now(),
-            ':podId' => 1,
-            ':domain' => 'localhost',
-            ':status' => 'ACTIVE'
-        ]);
-        $query->post();
-    }
-
     public function doExist()
     {
         return $this->doExist;

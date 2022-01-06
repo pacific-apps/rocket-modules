@@ -5,7 +5,7 @@ declare(strict_types=1);
 /**
  * Handles user creation
  * @param string publickey - The tenant's public key
- * @param array user - new user profile details
+ * @param array userde - new user profile details
  */
 
 
@@ -22,6 +22,8 @@ use \glyphic\RequireApiEndpoint;
 use \glyphic\models\User;
 use \glyphic\models\Tenant;
 use \glyphic\TypeOf;
+use \glyphic\PDOQueryController;
+use \glyphic\QueryBuilder;
 
 
 $request = new Request;
@@ -46,13 +48,50 @@ try {
         )
     );
 
+
     if ($requester['permissions']==='WEB'&&$tenant->getStatus()!=='ACTIVE') {
         throw new ResourceAccessForbiddenException(
             'Tenant is not active'
         );
     }
 
-    $user = new User($tenant->getTenantId());
+    if ($tenant->getStatus()!=='ACTIVE') {
+
+        /**
+         * If the tenant is not active, the flow would then
+         * require a token, and requester who can allow the creation
+         * would be the following:
+         * SUPERUSER, ADMIN, TENANTADMIN
+         * and/or special tenant staff permission
+         */
+
+         
+
+    }
+
+    $query = new PDOQueryController(
+        (new QueryBuilder('/users/get/user'))->build()
+    );
+    $query->prepare([
+        ':publicKey' => $request->payload()->publickey,
+        ':email' => TypeOf::email(
+            'User Email',
+            $request->payload()->userdetails->email ?? 'unknown'
+        ),
+        ':username' => TypeOf::alphanum(
+            'Username',
+            $request->payload()->userdetails->username ?? 'unknown'
+        )
+    ]);
+    $user = $query->get();
+
+    if ($user['doExist']) {
+        throw new AlreadyExistsException(
+            'User already exists'
+        );
+    }
+
+
 
 
 

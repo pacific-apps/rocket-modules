@@ -47,11 +47,13 @@ class PDOQueryController
         $result = $this->pdoStatement->fetchAll();
         if (empty($result)) {
             return [
-                'hasRecord' => false
+                'hasRecord' => false,
+                'doExist' => false
             ];
         }
         else {
             $result[0]['hasRecord'] = true;
+            $result[0]['doExist'] = true;
             return $result[0];
         }
     }

@@ -8,6 +8,10 @@ use \core\http\Request;
 use \core\http\Response;
 use \core\http\Accept;
 use \jwt\Token;
+use \glyphic\PDOQueryController;
+use \glyphic\QueryBuilder;
+use \glyphic\UniqueId;
+use \glyphic\TimeStamp;
 use \core\exceptions\UnauthorizedAccessException;
 use \core\exceptions\BadRequestException;
 use \core\exceptions\AlreadyExistsException;
@@ -39,16 +43,33 @@ try {
         );
     }
 
-    $tenant = new Tenant();
-    $tenant->create();
+    $tennant = [
+        'tennantId' => UniqueId::create32bitKey(UniqueId::BETANUMERIC),
+        'publicKey' => UniqueId::create32bitKey(UniqueId::ALPHANUMERIC),
+        'privateKey' => UniqueId::create32bitKey(UniqueId::ALPHANUMERIC)
+    ];
+
+    $query = new PDOQueryController(
+        (new QueryBuilder('/tenants/create/tenant'))->build()
+    );
+    $query->prepare([
+        ':tenantId' => $tennant['tennantId'],
+        ':publicKey' => $tennant['publicKey'],
+        ':privateKey' => $tennant['privateKey'],
+        ':createdAt' => TimeStamp::now(),
+        ':podId' => 1,
+        ':domain' => 'localhost',
+        ':status' => 'ACTIVE'
+    ]);
+    $query->post();
 
     Response::transmit([
         'code' => 200,
         'payload' => [
             'message' => 'Tennant has been created',
-            'tennantId' => $tenant->getTenantId(),
-            'publicKey' => $tenant->getPublicKey(),
-            'privateKey' => $tenant->getPrivateKey()
+            'tennantId' => $tennant['tennantId'],
+            'publicKey' => $tennant['publicKey'],
+            'privateKey' => $tennant['privateKey']
         ]
     ]);
 
