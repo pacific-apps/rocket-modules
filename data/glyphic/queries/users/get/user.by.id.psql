@@ -1,0 +1,4 @@
+SELECT * FROM m_glyf_user u
+LEFT JOIN s_glyf_profile p ON u.userId = p.userId
+WHERE u.tenantId IN (SELECT tenantId FROM m_glyf_tnt WHERE publicKey = :publicKey )
+AND u.userId = :userId

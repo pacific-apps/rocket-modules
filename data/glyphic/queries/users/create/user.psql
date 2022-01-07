@@ -1,2 +1,2 @@
-INSERT INTO m_glyf_user (userId, username, email, password, createdAt, activatedAt, role, permissions, tennantId, status)
-VALUES (:userId, :username, :email, :password, :createdAt, :activatedAt, :role, :permissions, :tennantId, :status)
+INSERT INTO m_glyf_user (userId, username, email, password, createdAt, activatedAt, role, permissions, tenantId, status)
+VALUES (:userId, :username, :email, :password, :createdAt, :activatedAt, :role, :permissions, :tenantId, :status)

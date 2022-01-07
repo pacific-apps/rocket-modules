@@ -1,2 +1,2 @@
-INSERT INTO s_glyf_profile (userId, firstName, lastName, tennantId, recordType)
-VALUES (:userId, :firstName, :lastName, :tennantId, :recordType)
+INSERT INTO s_glyf_profile (userId, firstName, lastName, tenantId, recordType)
+VALUES (:userId, :firstName, :lastName, :tenantId, :recordType)

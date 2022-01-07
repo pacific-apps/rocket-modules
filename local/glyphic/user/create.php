@@ -24,6 +24,8 @@ use \glyphic\models\Tenant;
 use \glyphic\TypeOf;
 use \glyphic\PDOQueryController;
 use \glyphic\QueryBuilder;
+use \glyphic\UniqueId;
+use \glyphic\TimeStamp;
 
 
 $request = new Request;
@@ -37,6 +39,12 @@ try {
         'userdetails'
     ]);
 
+    if (!isset($request->payload()->userdetails->password)) {
+        throw new BadRequestException (
+            'Requires password payload'
+        );
+    }
+
     $requester = [
         'permissions' => 'WEB'
     ];
@@ -48,13 +56,6 @@ try {
         )
     );
 
-
-    if ($requester['permissions']==='WEB'&&$tenant->getStatus()!=='ACTIVE') {
-        throw new ResourceAccessForbiddenException(
-            'Tenant is not active'
-        );
-    }
-
     if ($tenant->getStatus()!=='ACTIVE') {
 
         /**
@@ -65,7 +66,17 @@ try {
          * and/or special tenant staff permission
          */
 
-         
+         if ($requester['permissions']==='WEB') {
+             throw new ResourceAccessForbiddenException(
+                 'Tenant is not active'
+             );
+         }
+
+         if (!isset($request->payload()->token)) {
+             throw new ResourceAccessForbiddenException(
+                 'Requires token'
+             );
+         }
 
     }
 
@@ -91,15 +102,84 @@ try {
         );
     }
 
+    $newUserId       = UniqueId::create32BitKey(UniqueId::BETANUMERIC);
+    $dateNow         = TimeStamp::now();
+    $verificationKey = UniqueId::create64BitKey(UniqueId::ALPHANUMERIC);
 
+    $main = new PDOQueryController(
+        (new QueryBuilder('users/create/user'))->build()
+    );
 
+    $main->prepare([
+        ':userId' => $newUserId,
+        ':username' => $request->payload()->userdetails->username,
+        ':email' => TypeOf::email(
+            'email',
+            $request->payload()->userdetails->email ?? null
+        ),
+        ':password' => password_hash(
+            $request->payload()->userdetails->password,
+            PASSWORD_DEFAULT
+        ),
+        ':createdAt' => $dateNow,
+        ':activatedAt' => null,
+        ':role' => 'user',
+        ':permissions' => 'WEB',
+        ':tenantId' => $tenant->getTenantId(),
+        ':status' => 'NEW'
+    ]);
+
+    $profile = new PDOQueryController(
+        (new QueryBuilder('users/create/profile'))->build()
+    );
+    $profile->prepare([
+        ':userId' => $newUserId,
+        ':firstName' => TypeOf::alpha(
+            'First name',
+            $request->payload()->userdetails->firstname ?? null
+        ),
+        ':lastName' => TypeOf::alpha(
+            'Last name',
+            $request->payload()->userdetails->lastname ?? null
+        ),
+        ':tenantId' => $tenant->getTenantId(),
+        ':recordType' => 'user'
+    ]);
+
+    $activation = new PDOQueryController(
+        (new QueryBuilder('users/create/activation'))->build()
+    );
+    $activation->prepare([
+        ':userId' => $newUserId,
+        ':createdAt' => $dateNow,
+        ':verfKey' => $verificationKey,
+        ':createdBy' => 'users/create',
+        ':createdFor' => 'user_activation',
+        ':toExpireAt' => TimeStamp::add($dateNow, "2 days"),
+        ':tenantId' => $tenant->getTenantId(),
+        ':recordType' => 'user'
+    ]);
+
+    // $main->post();
+    // $profile->post();
+    // $activation->post();
+
+    Response::transmit([
+        'code' => 200,
+        'payload' => [
+            'message' => 'User has been created',
+            'userId' => $newUserId,
+            'verificationKey' => $verificationKey
+        ]
+    ]);
 
 
 } catch (\Exception $e) {
     if ($e instanceof \core\exceptions\RocketExceptionsInterface) {
         Response::transmit([
             'code' => $e->code(),
-            'exception' => 'RocketExceptionsInterface::'.$e->exception()
+            'exception' => 'RocketExceptionsInterface::'.$e->exception(),
+            //'exception'=>$e->getMessage()
         ]);
         exit();
     }
@@ -108,97 +188,3 @@ try {
         'exception' => $e->getMessage()
     ]);
 }
-
-
-/**
- * 1. Defining Pre-requisites for this endpoint
- * This endpoint only accepts POST request
- * and requires token and profile payload
- */
-
-/*
-Accept::method('POST');
-Accept::payload(['publicKey','user']);
-
-$password = $request->payload()->profile->password ?? null;
-if (null===$password) {
-    Response::abort('Requires password');
-}
-
-# Get Tennant Id
-$tennant = new PDOQuery('tennats/get/tennant.id');
-#$tennant->prepare();
-$tennantId = $jwt->payload()['tid'];
-
-try {
-
-    $newUserId       = IDGenerator::create32BitKey(IDGenerator::BETANUMERIC);
-    $dateNow         = DateManager::now('Y-m-d H:i:s');
-    $verificationKey = IDGenerator::create64BitKey(IDGenerator::ALPHANUMERIC);
-
-    $main = new PDOQuery('users/create/user');
-    $main->prepare([
-        ':userId' => $newUserId,
-        ':username' => TypeOf::alphanum(
-            'username',
-            $request->payload()->profile->username ?? null
-        ),
-        ':email' => TypeOf::email(
-            'email',
-            $request->payload()->profile->email ?? null
-        ),
-        ':password' => password_hash($password,PASSWORD_DEFAULT),
-        ':createdAt' => $dateNow,
-        ':activatedAt' => null,
-        ':role' => 'user',
-        ':permissions' => 'WEB',
-        ':tennantId' => $tennantId,
-        ':status' => 'NEW'
-    ]);
-
-    $profile = new PDOQuery('users/create/profile');
-    $profile->prepare([
-        ':userId' => $newUserId,
-        ':firstName' => TypeOf::alpha(
-            'First name',
-            $request->payload()->profile->firstname ?? null
-        ),
-        ':lastName' => TypeOf::alpha(
-            'Last name',
-            $request->payload()->profile->lastname ?? null
-        ),
-        ':tennantId' => $tennantId,
-        ':recordType' => 'user'
-    ]);
-
-    $activation = new PDOQuery('users/create/activation');
-    $activation->prepare([
-        ':userId' => $newUserId,
-        ':createdAt' => $dateNow,
-        ':verfKey' => $verificationKey,
-        ':createdBy' => 'users/create',
-        ':createdFor' => 'user_activation',
-        ':toExpireAt' => DateManager::add($dateNow, "2 days"),
-        ':tennantId' => $tennantId,
-        ':recordType' => 'user'
-    ]);
-
-    $main->post();
-    $profile->post();
-    $activation->post();
-
-} catch (\PDOException $e) {
-    Response::error();
-    exit();
-}
-
-Response::transmit([
-    'code' => 200,
-    'payload' => [
-        'message' => 'User has been created',
-        'userId' => $newUserId,
-        'verificationKey' => $verificationKey
-    ]
-]);
-
-*/
