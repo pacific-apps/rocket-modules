@@ -160,9 +160,29 @@ try {
         ':recordType' => 'user'
     ]);
 
-    // $main->post();
-    // $profile->post();
-    // $activation->post();
+    $contacts = new PDOQueryController(
+        (new QueryBuilder('users/create/contact'))->build()
+    );
+    $contacts->prepare([
+        ':userId' => $newUserId,
+        ':tenantId' => $tenant->getTenantId(),
+        ':recordType' => 'user'
+    ]);
+
+    $address = new PDOQueryController(
+        (new QueryBuilder('users/create/address'))->build()
+    );
+    $address->prepare([
+        ':userId' => $newUserId,
+        ':tenantId' => $tenant->getTenantId(),
+        ':recordType' => 'user'
+    ]);
+
+    $main->post();
+    $profile->post();
+    $activation->post();
+    $contacts->post();
+    $address->post();
 
     Response::transmit([
         'code' => 200,

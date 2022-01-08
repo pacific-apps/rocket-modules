@@ -124,6 +124,46 @@ class TypeOf
         return htmlspecialchars($data, ENT_QUOTES, 'UTF-8');
     }
 
+    public static function fullname (
+        string $label,
+        $data,
+        string $flag = null
+        )
+    {
+        if ($flag==='NULLABLE'&&null===$data) {
+            return null;
+        }
+
+        if (!preg_match('/^[a-zA-Z ]+$/', $data)) {
+            throw new BadRequestException (
+                'Invalid Data Type: '.$label
+            );
+        }
+        return htmlspecialchars($data, ENT_QUOTES, 'UTF-8');
+    }
+
+    public static function alphanumwithspace (
+        string $label,
+        $data,
+        string $flag = null
+        )
+    {
+
+        if ($flag==='NULLABLE'&&null===$data) {
+            return null;
+        }
+
+        if (!preg_match('/^[a-zA-Z0-9 ]+$/', $data)) {
+            throw new BadRequestException (
+                'Invalid Data Type: '.$label
+            );
+        }
+        return htmlspecialchars($data, ENT_QUOTES, 'UTF-8');
+
+    }
+
+
+
     public static function escaped(
         string $label,
         $data

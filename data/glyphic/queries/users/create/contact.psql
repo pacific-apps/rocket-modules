@@ -1,0 +1,2 @@
+INSERT INTO s_glyf_user_cnt (userId, tenantId, recordType)
+VALUES (:userId, :tenantId, :recordType)
