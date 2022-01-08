@@ -1,0 +1,7 @@
+SELECT v.createdAt, v.createdBy, v.createdFor, v.toExpireAt, v.verfKey, u.status
+FROM m_glyf_verf_keys v
+LEFT JOIN m_glyf_user u ON v.userId = u.userId
+WHERE u.userId = :userId
+AND v.createdBy = :createdBy
+AND v.createdFor = :createdFor
+AND v.tenantId IN (SELECT tenantId FROM m_glyf_tnt WHERE publicKey = :publicKey)
