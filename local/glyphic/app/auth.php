@@ -26,6 +26,7 @@ $response = new Response;
 
 try {
 
+    RequireApiEndpoint::header();
     RequireApiEndpoint::method('POST');
     RequireApiEndpoint::payload([
         'public',

@@ -58,6 +58,14 @@ class PDOQueryController
         }
     }
 
+    public function getAll()
+    {
+        $this->pdoStatement->execute();
+        $this->pdoStatement->setFetchMode(\PDO::FETCH_ASSOC);
+        $result = $this->pdoStatement->fetchAll();
+        return $result;
+    }
+
 
 
 

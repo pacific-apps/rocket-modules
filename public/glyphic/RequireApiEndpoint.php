@@ -115,4 +115,20 @@ class RequireApiEndpoint {
 
     }
 
+    public static function header()
+    {
+        header('Access-Control-Allow-Origin: *');
+        header('Access-Control-Allow-Headers: token, Content-Type');
+        header('Access-Control-Allow-Methods: GET, POST, PATCH, PUT, DELETE, OPTION');
+        header('Access-Control-Max-Age: 1728000');
+        header('Content-Length: 0');
+        header('Access-Control-Allow-Credentials: true');
+        if ($_SERVER['REQUEST_METHOD'] == "OPTIONS") {
+            header('Access-Control-Allow-Origin: *');
+            header("Access-Control-Allow-Headers: X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Request-Method,Access-Control-Request-Headers, Authorization");
+            header("HTTP/1.1 200 OK");
+            exit();
+        }
+    }
+
 }
