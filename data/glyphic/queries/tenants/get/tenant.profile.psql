@@ -1,0 +1,4 @@
+SELECT * FROM s_glyf_profile
+WHERE tenantId IN (SELECT tenantId FROM m_glyf_tnt WHERE publicKey = :publicKey )
+AND recordType = 'tenant.profile'
+LIMIT 1

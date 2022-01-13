@@ -31,7 +31,7 @@ declare(strict_types=1);
 try {
 
     $request = new Request;
-
+    RequireApiEndpoint::header();
     RequireApiEndpoint::method('GET');
     RequireApiEndpoint::query([
         'token'
@@ -40,68 +40,29 @@ try {
     $jwt = new Token($request->query()->token);
 
     if (!$jwt->isValid()) {
-        throw new UnauthorizedAccessException (
-            'Token is either invalid or expired'
+        throw new UnauthorizedAccessException(
+            'Token provided is either expired or invalid'
         );
     }
 
-    $requester = $jwt->payload();
+    $payload = $jwt->payload();
 
-
-    $tenant = new Tenant(
-        TypeOf::alphanum(
-            'Public Key',
-            $requester['publicKey'] ?? null
-        )
-    );
-
-    if ($tenant->getStatus()!=='ACTIVE') {
-        throw new ResourceAccessForbiddenException(
-            'Tenant is not active'
-        );
-    }
-
-    $query = new PDOQueryController(
-        (new QueryBuilder('users/get/user.by.id'))->build()
-    );
-    $query->prepare([
-        ':userId' => TypeOf::alphanum(
-            'User Id',
-            $requester['userId'] ?? null
-        ),
-        ':publicKey' => $requester['publicKey']
-    ]);
-
-    $user = $query->get();
-
-    if (!$user['hasRecord']) {
-        throw new RecordNotFoundException(
-            'User not found'
-        );
-    }
-
-    if ($user['status']!=='ACTIVE') {
-        throw new ResourceAccessForbiddenException(
-            'User is not active'
+    if (!isset($payload['requester'])||$payload['requester']!=='root') {
+        throw new UnauthorizedAccessException(
+            'Token provided is either expired or invalid'
         );
     }
 
     $token = new Token();
     $token->payload([
-        'userId' => $user['userId'],
-        'permissions' => $user['permissions'],
-        'publicKey' => $requester['publicKey']
+        'requester'=>'root'
     ]);
+    $token->create();
 
     Response::transmit([
         'code' => 200,
         'payload' => [
-            'message' => 'User authenticated',
-            'token' => $token->create(),
-            'exp' => '7min',
-            'firstName' => $user['firstName'],
-            'lastName' => $user['lastName'],
-            'profilePhoto' => $user['profilePhoto']
+            'token' => $token->create()
         ]
     ]);
 
