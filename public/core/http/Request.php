@@ -46,7 +46,7 @@ class Request extends Parser
     {
         Parser::parseQuery(
             factory: $this->factory,
-            query: $_SERVER["QUERY_STRING"]
+            query: $_SERVER["QUERY_STRING"] ?? ''
         );
     }
 
