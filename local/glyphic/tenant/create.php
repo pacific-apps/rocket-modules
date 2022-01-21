@@ -1,7 +1,7 @@
 <?php
 
 declare(strict_types=1);
-# Creating a new Glyphic tennant
+# Creating a new Glyphic tenant
 
 require $_SERVER['DOCUMENT_ROOT'].'/imports.php';
 use \core\http\Request;
@@ -23,6 +23,7 @@ $response = new Response;
 
 try {
 
+    RequireApiEndpoint::header();
     RequireApiEndpoint::method('POST');
     RequireApiEndpoint::payload([
         'token'
@@ -43,33 +44,91 @@ try {
         );
     }
 
-    $tennant = [
-        'tennantId' => UniqueId::create32bitKey(UniqueId::BETANUMERIC),
+    $tenant = [
+        'tenantId' => UniqueId::create32bitKey(UniqueId::BETANUMERIC),
         'publicKey' => UniqueId::create32bitKey(UniqueId::ALPHANUMERIC),
         'privateKey' => UniqueId::create32bitKey(UniqueId::ALPHANUMERIC)
     ];
 
-    $query = new PDOQueryController(
+    $createTenantQuery = new PDOQueryController(
         (new QueryBuilder('/tenants/create/tenant'))->build()
     );
-    $query->prepare([
-        ':tenantId' => $tennant['tennantId'],
-        ':publicKey' => $tennant['publicKey'],
-        ':privateKey' => $tennant['privateKey'],
+    $createTenantQuery->prepare([
+        ':tenantId' => $tenant['tenantId'],
+        ':publicKey' => $tenant['publicKey'],
+        ':privateKey' => $tenant['privateKey'],
         ':createdAt' => TimeStamp::now(),
         ':podId' => 1,
         ':domain' => 'localhost',
         ':status' => 'ACTIVE'
     ]);
-    $query->post();
+
+
+    $newUserId = UniqueId::create32BitKey(UniqueId::BETANUMERIC);
+    $dateNow   = TimeStamp::now();
+    $main = new PDOQueryController(
+        (new QueryBuilder('users/create/user'))->build()
+    );
+
+    $main->prepare([
+        ':userId' => $newUserId,
+        ':username' => $tenant['publicKey'],
+        ':email' => $tenant['publicKey'].'@glyphic.com',
+        ':password' => password_hash(
+            'admin@glyphic',
+            PASSWORD_DEFAULT
+        ),
+        ':createdAt' => $dateNow,
+        ':activatedAt' => $dateNow,
+        ':role' => 'tenantadmin',
+        ':permissions' => 'WEB,TENANTADMIN',
+        ':tenantId' => $tenant['tenantId'],
+        ':status' => 'ACTIVE'
+    ]);
+
+    $profile = new PDOQueryController(
+        (new QueryBuilder('users/create/profile'))->build()
+    );
+    $profile->prepare([
+        ':userId' => $newUserId,
+        ':firstName' => 'New',
+        ':lastName' => 'Tenant',
+        ':tenantId' => $tenant['tenantId'],
+        ':recordType' => 'tenantadmin'
+    ]);
+
+    $contacts = new PDOQueryController(
+        (new QueryBuilder('users/create/contact'))->build()
+    );
+    $contacts->prepare([
+        ':userId' => $newUserId,
+        ':tenantId' => $tenant['tenantId'],
+        ':recordType' => 'tenantadmin'
+    ]);
+
+    $address = new PDOQueryController(
+        (new QueryBuilder('users/create/address'))->build()
+    );
+    $address->prepare([
+        ':userId' => $newUserId,
+        ':tenantId' => $tenant['tenantId'],
+        ':recordType' => 'tenantadmin'
+    ]);
+
+
+    $main->post();
+    $profile->post();
+    $contacts->post();
+    $address->post();
+    $createTenantQuery->post();
 
     Response::transmit([
         'code' => 200,
         'payload' => [
             'message' => 'Tennant has been created',
-            'tennantId' => $tennant['tennantId'],
-            'publicKey' => $tennant['publicKey'],
-            'privateKey' => $tennant['privateKey']
+            'tenantId' => $tenant['tenantId'],
+            'publicKey' => $tenant['publicKey'],
+            'privateKey' => $tenant['privateKey']
         ]
     ]);
 

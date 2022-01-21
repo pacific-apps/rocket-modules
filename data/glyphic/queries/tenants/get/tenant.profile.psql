@@ -1,4 +1,5 @@
-SELECT * FROM s_glyf_profile
-WHERE tenantId IN (SELECT tenantId FROM m_glyf_tnt WHERE publicKey = :publicKey )
-AND recordType = 'tenant.profile'
+SELECT * FROM s_glyf_profile p
+LEFT JOIN m_glyf_user u ON p.userId = u.userId
+WHERE p.tenantId IN (SELECT tenantId FROM m_glyf_tnt WHERE publicKey = :publicKey )
+AND p.recordType = 'tenantadmin'
 LIMIT 1

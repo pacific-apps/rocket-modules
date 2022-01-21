@@ -28,9 +28,10 @@
      $request = new Request;
      RequireApiEndpoint::header();
      RequireApiEndpoint::method('GET');
-     RequireApiEndpoint::query([
+     RequireApiEndpoint::payload([
          'token',
-         'publickey'
+         'publickey',
+         'profile'
      ]);
 
      $jwt = new Token($request->query()->token);
@@ -54,7 +55,7 @@
      $query->prepare([
          'publicKey' => TypeOf::alphanum(
              'Tenant Public Key',
-             $request->query()->publickey ?? null
+             $request->payload()->publickey ?? null
             )
      ]);
 
@@ -66,29 +67,29 @@
          );
      }
 
-     $profileQuery = new PDOQueryController(
-         (new QueryBuilder('tenants/get/tenant.profile'))->build()
-     );
-     $profileQuery->prepare([
-         'publicKey' => $request->query()->publickey
-     ]);
-     $profile = $profileQuery->get();
 
-     unset($tenant['hasRecord']);
-     unset($tenant['doExist']);
-     unset($tenant['id']);
-     unset($profile['hasRecord']);
-     unset($profile['doExist']);
-     unset($profile['id']);
-     unset($profile['password']);
-     unset($profile['permissions']);
-     unset($profile['role']);
+
+
+
+
+
+     $setArguments = [];
+     $prepareArguments = [
+         ':publicKey' => $request->payload()->publickey,
+         ':userId' => $userIdOfConcern
+     ];
+
+
+
+
+
+
+
 
      Response::transmit([
          'code' => 200,
          'payload' => [
-             'tenant' => $tenant,
-             'profile' => $profile
+
          ]
      ]);
 
