@@ -27,13 +27,16 @@
 
      $request = new Request;
      RequireApiEndpoint::header();
-     RequireApiEndpoint::method('GET');
-     RequireApiEndpoint::query([
+     RequireApiEndpoint::method('PATCH');
+     RequireApiEndpoint::payload([
          'token',
-         'publickey'
+         'publickey',
+         'uid',
+         'business',
+         'type'
      ]);
 
-     $jwt = new Token($request->query()->token);
+     $jwt = new Token($request->payload()->token);
 
      if (!$jwt->isValid()) {
          throw new UnauthorizedAccessException(
@@ -54,7 +57,7 @@
      $query->prepare([
          'publicKey' => TypeOf::alphanum(
              'Tenant Public Key',
-             $request->query()->publickey ?? null
+             $request->payload()->publickey ?? null
             )
      ]);
 
@@ -66,35 +69,42 @@
          );
      }
 
-     $tenant['hasDefaultPassword'] = true;
-
-     $profileQuery = new PDOQueryController(
-         (new QueryBuilder('tenants/get/tenant.profile'))->build()
-     );
-     $profileQuery->prepare([
-         'publicKey' => $request->query()->publickey
-     ]);
-     $profile = $profileQuery->get();
-
-     if (!password_verify('admin@glyphic',$profile['password'])) {
-         $tenant['hasDefaultPassword'] = false;
+     if($request->payload()->type=='business_name_only'){
+         if (!isset($request->payload()->business->name)) {
+             throw new BadRequestException(
+                 'Type business_name_only requires Business name payload'
+             );
+         }
+         $businessNameUpdater = new PDOQueryController(
+             (new QueryBuilder('tenants/update/business.name'))->build()
+         );
+         $businessNameUpdater->prepare([
+             ':businessName' => TypeOf::alphanumwithspace(
+                 'Tenant Business Name',
+                 $request->payload()->business->name
+             ),
+             ':userId' => TypeOf::alphanum(
+                 'Tenant User Id',
+                 $request->payload()->uid
+             ),
+             ':publicKey' => $request->payload()->publickey
+         ]);
+         $businessNameUpdater->post();
      }
 
-     unset($tenant['hasRecord']);
-     unset($tenant['doExist']);
-     unset($tenant['id']);
-     unset($profile['hasRecord']);
-     unset($profile['doExist']);
-     unset($profile['id']);
-     unset($profile['password']);
-     unset($profile['permissions']);
-     unset($profile['role']);
+
+
+
+
+
+
+
+
 
      Response::transmit([
          'code' => 200,
          'payload' => [
-             'tenant' => $tenant,
-             'profile' => $profile
+             'message' => 'Tenant business information updated'
          ]
      ]);
 

@@ -1,0 +1,4 @@
+UPDATE m_glyf_user
+SET email = :email, username = :username
+WHERE tenantId IN (SELECT tenantId FROM m_glyf_tnt WHERE publicKey = :publicKey )
+AND userId = :userId

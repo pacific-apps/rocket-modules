@@ -1,0 +1,4 @@
+UPDATE s_glyf_profile
+SET firstName = :firstName, lastName = :lastName
+WHERE tenantId IN (SELECT tenantId FROM m_glyf_tnt WHERE publicKey = :publicKey )
+AND userId = :userId

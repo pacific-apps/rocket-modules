@@ -1,8 +1,7 @@
 <?php
 
 /**
- * Modifies the user profile table
- * Has to include profile information
+ * Search All Tenants
  * @param string token - User authentication token
  */
 
@@ -29,8 +28,7 @@
      RequireApiEndpoint::header();
      RequireApiEndpoint::method('GET');
      RequireApiEndpoint::query([
-         'token',
-         'publickey'
+         'token'
      ]);
 
      $jwt = new Token($request->query()->token);
@@ -48,53 +46,17 @@
          );
      }
 
+
      $query = new PDOQueryController(
-         (new QueryBuilder('tenants/get/tenant'))->build()
+         (new QueryBuilder('tenants/get/all.tenants'))->build()
      );
-     $query->prepare([
-         'publicKey' => TypeOf::alphanum(
-             'Tenant Public Key',
-             $request->query()->publickey ?? null
-            )
-     ]);
-
-     $tenant = $query->get();
-
-     if (!$tenant['doExist']) {
-         throw new RecordNotFoundException(
-             'Tenant not found'
-         );
-     }
-
-     $tenant['hasDefaultPassword'] = true;
-
-     $profileQuery = new PDOQueryController(
-         (new QueryBuilder('tenants/get/tenant.profile'))->build()
-     );
-     $profileQuery->prepare([
-         'publicKey' => $request->query()->publickey
-     ]);
-     $profile = $profileQuery->get();
-
-     if (!password_verify('admin@glyphic',$profile['password'])) {
-         $tenant['hasDefaultPassword'] = false;
-     }
-
-     unset($tenant['hasRecord']);
-     unset($tenant['doExist']);
-     unset($tenant['id']);
-     unset($profile['hasRecord']);
-     unset($profile['doExist']);
-     unset($profile['id']);
-     unset($profile['password']);
-     unset($profile['permissions']);
-     unset($profile['role']);
+     $query->prepare([]);
+     $tenants = $query->getAll();
 
      Response::transmit([
          'code' => 200,
          'payload' => [
-             'tenant' => $tenant,
-             'profile' => $profile
+             'result' => $tenants
          ]
      ]);
 

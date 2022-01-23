@@ -19,6 +19,8 @@ use \core\http\Request;
 use \core\http\Response;
 use \core\exceptions\UnauthorizedAccessException;
 use \glyphic\RequireApiEndpoint;
+use \glyphic\TypeOf;
+use \glyphic\models\Glyphic;
 use \jwt\Token;
 
 $request  = new Request;
@@ -34,16 +36,25 @@ try {
         'grant_type=client_credentials'
     ]);
 
-    $key    = getenv('GLYPHIC_PUBLIC');
-    $secret = getenv('GLYPHIC_SECRET');
+    $glyphic = new Glyphic;
 
-    if ($key!==$request->payload()->public) {
+    if(!$glyphic->verifyPublicKey(
+        TypeOf::alphanum(
+            'Public Key',
+            $request->payload()->public
+        )
+    )) {
         throw new UnauthorizedAccessException(
             'Invalid Public Key provided'
         );
     }
 
-    if ($secret!==$request->payload()->secret) {
+    if (!$glyphic->verifyPrivateKey(
+        TypeOf::alphanum(
+            'Private Key',
+            $request->payload()->secret
+        )
+    )) {
         throw new UnauthorizedAccessException(
             'Invalid Secret Key provided'
         );

@@ -1,0 +1,4 @@
+SELECT t.tenantId, publicKey, createdAt, status, firstName, lastName, profilePhoto, nameTitle FROM m_glyf_tnt t
+LEFT JOIN s_glyf_profile p ON t.tenantId = p.tenantId
+WHERE p.recordType = 'tenant.admin'
+LIMIT 10

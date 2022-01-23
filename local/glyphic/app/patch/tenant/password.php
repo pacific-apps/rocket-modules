@@ -27,13 +27,15 @@
 
      $request = new Request;
      RequireApiEndpoint::header();
-     RequireApiEndpoint::method('GET');
-     RequireApiEndpoint::query([
+     RequireApiEndpoint::method('PATCH');
+     RequireApiEndpoint::payload([
          'token',
-         'publickey'
+         'publickey',
+         'password',
+         'uid'
      ]);
 
-     $jwt = new Token($request->query()->token);
+     $jwt = new Token($request->payload()->token);
 
      if (!$jwt->isValid()) {
          throw new UnauthorizedAccessException(
@@ -54,7 +56,7 @@
      $query->prepare([
          'publicKey' => TypeOf::alphanum(
              'Tenant Public Key',
-             $request->query()->publickey ?? null
+             $request->payload()->publickey ?? null
             )
      ]);
 
@@ -66,35 +68,42 @@
          );
      }
 
-     $tenant['hasDefaultPassword'] = true;
+     $newPassword = $request->payload()->password;
 
-     $profileQuery = new PDOQueryController(
-         (new QueryBuilder('tenants/get/tenant.profile'))->build()
-     );
-     $profileQuery->prepare([
-         'publicKey' => $request->query()->publickey
-     ]);
-     $profile = $profileQuery->get();
-
-     if (!password_verify('admin@glyphic',$profile['password'])) {
-         $tenant['hasDefaultPassword'] = false;
+     if ($newPassword==""||$newPassword==" ") {
+         throw new BadRequestException(
+             'Invalid Password'
+         );
      }
 
-     unset($tenant['hasRecord']);
-     unset($tenant['doExist']);
-     unset($tenant['id']);
-     unset($profile['hasRecord']);
-     unset($profile['doExist']);
-     unset($profile['id']);
-     unset($profile['password']);
-     unset($profile['permissions']);
-     unset($profile['role']);
+     if (strlen($newPassword)<8) {
+         throw new BadRequestException(
+             'New password cannot be less than 8 characters'
+         );
+     }
+
+     $hashedNewPassword = password_hash($newPassword,PASSWORD_DEFAULT);
+
+     $passwordUpdater = new PDOQueryController(
+         (new QueryBuilder('tenants/update/user.password'))->build()
+     );
+     $passwordUpdater->prepare([
+         ':password' => $hashedNewPassword,
+         ':publicKey' => TypeOf::alphanum(
+             'Tenant Public Key',
+             $request->payload()->publickey
+         ),
+         ':userId' => TypeOf::alphanum(
+             'Tenant User Id',
+             $request->payload()->uid
+         ),
+     ]);
+     $passwordUpdater->post();
 
      Response::transmit([
          'code' => 200,
          'payload' => [
-             'tenant' => $tenant,
-             'profile' => $profile
+             'message' => 'Tenant password updated'
          ]
      ]);
 

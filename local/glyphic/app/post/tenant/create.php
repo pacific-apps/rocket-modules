@@ -94,7 +94,7 @@ try {
         ':firstName' => 'New',
         ':lastName' => 'Tenant',
         ':tenantId' => $tenant['tenantId'],
-        ':recordType' => 'tenantadmin'
+        ':recordType' => 'tenant.admin'
     ]);
 
     $contacts = new PDOQueryController(
@@ -103,7 +103,7 @@ try {
     $contacts->prepare([
         ':userId' => $newUserId,
         ':tenantId' => $tenant['tenantId'],
-        ':recordType' => 'tenantadmin'
+        ':recordType' => 'tenant.admin'
     ]);
 
     $address = new PDOQueryController(
@@ -112,7 +112,7 @@ try {
     $address->prepare([
         ':userId' => $newUserId,
         ':tenantId' => $tenant['tenantId'],
-        ':recordType' => 'tenantadmin'
+        ':recordType' => 'tenant.admin'
     ]);
 
 
