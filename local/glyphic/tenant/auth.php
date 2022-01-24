@@ -45,7 +45,7 @@ try {
         TypeOf::alphanum(
             'Public Key',
             $request->payload()->public
-            )
+        )
     );
     $result = $query->get();
 

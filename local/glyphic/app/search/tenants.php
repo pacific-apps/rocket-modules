@@ -20,6 +20,7 @@
  use \glyphic\PDOQueryController;
  use \glyphic\QueryBuilder;
  use \glyphic\TimeStamp;
+ use \glyphic\Paginator;
  use \jwt\Token;
 
  try {
@@ -46,17 +47,72 @@
          );
      }
 
+     # Sort Logic
+     if (!isset($request->query()->sort)) {
+         $sortBy = 'DESC';
+     } else {
+         $sortBy = $request->query()->sort;
+         if ($sortBy!=='desc'&&$sortBy!=='asc') {
+             throw new BadRequestException(
+                 'Invalid sort option provided'
+             );
+         }
+     }
+
+     # Order by Logic
+     if (!isset($request->query()->order_by)) {
+         $orderBy = 'createdAt';
+     } else {
+         $orderBy = $request->query()->order_by;
+
+         # Allowed Order By Options
+         if (
+             $orderBy!=='createdAt'&&
+             $orderBy!=='nameTitle'
+             )
+        {
+             throw new BadRequestException(
+                 'Invalid sort option provided'
+             );
+         }
+     }
+
+
+     # Query Settings
+     $resultsPerPage = TypeOf::integer(
+         'Results per page',
+         $request->query()->results_per_page,
+         'NULLABLE'
+     ) ?? 5;
+
+     $pageQuery = TypeOf::integer(
+         'Page Query',
+         $request->query()->page,
+         'NULLABLE'
+     ) ?? 1;
+
+
+     $queryBuilder = new QueryBuilder('tenants/get/all.tenants');
+     $queryBuilder->data([
+         'orderBy' => $orderBy,
+         'sortBy' => $sortBy
+     ]);
 
      $query = new PDOQueryController(
-         (new QueryBuilder('tenants/get/all.tenants'))->build()
+         $queryBuilder->build()
      );
      $query->prepare([]);
      $tenants = $query->getAll();
 
+     $results = Paginator::paginate(
+         $tenants, $resultsPerPage, $pageQuery
+     );
+
      Response::transmit([
          'code' => 200,
          'payload' => [
-             'result' => $tenants
+             'result' => $results['aggregated'],
+             'pages' => $results['totalPage']
          ]
      ]);
 
