@@ -43,13 +43,17 @@ try {
     RequireApiEndpoint::header();
 
     # Require API Method endpoint
-    RequireApiEndpoint::method('');
-
-    # Require API query parameters
-    RequireApiEndpoint::query([]);
+    RequireApiEndpoint::method('POST');
 
     # Require API payload
-    RequireApiEndpoint::payload([]);
+    RequireApiEndpoint::payload([
+        'publicKey',
+        'firstName',
+        'lastName',
+        'email',
+        'username',
+        'password'
+    ]);
 
     Response::transmit([
         'payload' => [

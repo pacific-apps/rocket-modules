@@ -4,3 +4,4 @@ node_modules
 /local/test
 /logs/toolkit
 /reserved
+/data/glyphic/init.txt

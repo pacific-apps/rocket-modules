@@ -61,86 +61,86 @@ try {
                 recordType VARCHAR(32) NOT NULL,
                 status VARCHAR(32) NOT NULL
             );
+        ",
+        "main_verf_keys" => "
+            CREATE TABLE m_glyf_verf_keys (
+                id INT(12) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                userId VARCHAR(32) NOT NULL,
+                verfKey VARCHAR(64) NOT NULL,
+                createdAt VARCHAR(32) NOT NULL,
+                createdBy VARCHAR(32) NOT NULL,
+                createdFor VARCHAR(32) NOT NULL,
+                toExpireAt VARCHAR(32) NOT NULL,
+                tenantId VARCHAR(32) NOT NULL,
+                recordType VARCHAR(32) NOT NULL
+            );
+        ",
+        "sub_profile" => "
+            CREATE TABLE s_glyf_profile (
+                id INT(12) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                userId VARCHAR(32) NOT NULL,
+                firstName VARCHAR(64) NOT NULL,
+                middleName VARCHAR(64),
+                lastName VARCHAR(32) NOT NULL,
+                nameTitle VARCHAR(32),
+                suffix VARCHAR(32),
+                gender VARCHAR(32),
+                profilePhoto TEXT,
+                tenantId VARCHAR(32) NOT NULL,
+                recordType VARCHAR(32) NOT NULL
+            );
+        ",
+        "sub_user_actions_tracker"=>"
+            CREATE TABLE s_glyf_user_actrk (
+                id INT(12) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                userId VARCHAR(32) NOT NULL,
+                actionType VARCHAR(32) NOT NULL,
+                createdAt VARCHAR(32) NOT NULL,
+                toExpireAt VARCHAR(32) NOT NULL,
+                tenantId VARCHAR(32) NOT NULL,
+                recordType VARCHAR(32) NOT NULL
+            );
+        ",
+        "sub_user_address" => "
+            CREATE TABLE s_glyf_user_adrs (
+                id INT(12) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                userId VARCHAR(32) NOT NULL,
+                addressType VARCHAR(32),
+                addressLine1 VARCHAR(32),
+                addressLine2 VARCHAR(32),
+                apartment VARCHAR(32),
+                building VARCHAR(32),
+                street VARCHAR(32),
+                zone VARCHAR(32),
+                barangay VARCHAR(32),
+                town VARCHAR(32),
+                city VARCHAR(32),
+                province VARCHAR(32),
+                region VARCHAR(32),
+                island VARCHAR(32),
+                country VARCHAR(32),
+                zipcode VARCHAR(32),
+                tenantId VARCHAR(32) NOT NULL,
+                recordType VARCHAR(32) NOT NULL
+            );
+        ",
+        "sub_user_contact" => "
+            CREATE TABLE s_glyf_user_cnt (
+                id INT(12) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                userId VARCHAR(32) NOT NULL,
+                contactType VARCHAR(32),
+                secondaryEmail VARCHAR(64),
+                businessEmail VARCHAR(64),
+                primaryPhone VARCHAR(32),
+                secondaryPhone VARCHAR(32),
+                businessPhone VARCHAR(32),
+                faxNumber VARCHAR(32),
+                emerContPerson VARCHAR(64),
+                emerContNumber VARCHAR(32),
+                tenantId VARCHAR(32) NOT NULL,
+                recordType VARCHAR(32) NOT NULL
+            );
         "
-        // "main_verf_keys" => "
-        //     CREATE TABLE m_glyf_verf_keys (
-        //         id INT(12) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        //         userId VARCHAR(32) NOT NULL,
-        //         verfKey VARCHAR(64) NOT NULL,
-        //         createdAt VARCHAR(32) NOT NULL,
-        //         createdBy VARCHAR(32) NOT NULL,
-        //         createdFor VARCHAR(32) NOT NULL,
-        //         toExpireAt VARCHAR(32) NOT NULL,
-        //         tenantId VARCHAR(32) NOT NULL,
-        //         recordType VARCHAR(32) NOT NULL
-        //     );
-        // ",
-        // "sub_profile" => "
-        //     CREATE TABLE s_glyf_profile (
-        //         id INT(12) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        //         userId VARCHAR(32) NOT NULL,
-        //         firstName VARCHAR(64) NOT NULL,
-        //         middleName VARCHAR(64),
-        //         lastName VARCHAR(32) NOT NULL,
-        //         nameTitle VARCHAR(32),
-        //         suffix VARCHAR(32),
-        //         gender VARCHAR(32),
-        //         profilePhoto TEXT,
-        //         tenantId VARCHAR(32) NOT NULL,
-        //         recordType VARCHAR(32) NOT NULL
-        //     );
-        // ",
-        // "sub_user_actions_tracker"=>"
-        //     CREATE TABLE s_glyf_user_actrk (
-        //         id INT(12) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        //         userId VARCHAR(32) NOT NULL,
-        //         actionType VARCHAR(32) NOT NULL,
-        //         createdAt VARCHAR(32) NOT NULL,
-        //         toExpireAt VARCHAR(32) NOT NULL,
-        //         tenantId VARCHAR(32) NOT NULL,
-        //         recordType VARCHAR(32) NOT NULL
-        //     );
-        // ",
-        // "sub_user_address" => "
-        //     CREATE TABLE s_glyf_user_adrs (
-        //         id INT(12) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        //         userId VARCHAR(32) NOT NULL,
-        //         addressType VARCHAR(32),
-        //         addressLine1 VARCHAR(32),
-        //         addressLine2 VARCHAR(32),
-        //         apartment VARCHAR(32),
-        //         building VARCHAR(32),
-        //         street VARCHAR(32),
-        //         zone VARCHAR(32),
-        //         barangay VARCHAR(32),
-        //         town VARCHAR(32),
-        //         city VARCHAR(32),
-        //         province VARCHAR(32),
-        //         region VARCHAR(32),
-        //         island VARCHAR(32),
-        //         country VARCHAR(32),
-        //         zipcode VARCHAR(32),
-        //         tenantId VARCHAR(32) NOT NULL,
-        //         recordType VARCHAR(32) NOT NULL
-        //     );
-        // ",
-        // "sub_user_contact" => "
-        //     CREATE TABLE s_glyf_user_cnt (
-        //         id INT(12) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-        //         userId VARCHAR(32) NOT NULL,
-        //         contactType VARCHAR(32),
-        //         secondaryEmail VARCHAR(64),
-        //         businessEmail VARCHAR(64),
-        //         primaryPhone VARCHAR(32),
-        //         secondaryPhone VARCHAR(32),
-        //         businessPhone VARCHAR(32),
-        //         faxNumber VARCHAR(32),
-        //         emerContPerson VARCHAR(64),
-        //         emerContNumber VARCHAR(32),
-        //         tenantId VARCHAR(32) NOT NULL,
-        //         recordType VARCHAR(32) NOT NULL
-        //     );
-        // "
     ];
 
     RequireApiEndpoint::header();
@@ -163,11 +163,19 @@ try {
     }
 
     $payload = $jwt->payload();
-    if (!isset($payload['requester'])&&$payload['requester']!=='root') {
+
+    if (!isset($payload['requester'])) {
         throw new UnauthorizedAccessException(
             'Token provided is either expired or invalid'
         );
     }
+
+    if ($payload['requester']!=='root') {
+        throw new UnauthorizedAccessException(
+            'Token provided is either expired or invalid'
+        );
+    }
+
 
     $init = ROOT.'/data/glyphic/init.txt';
     if (file_exists($init)) {
@@ -183,8 +191,7 @@ try {
         LIMIT 1;
     ';
 
-    $query = new PDOTransaction();
-    $query->query($tableExistsQuery);
+    $query = new PDOQueryController($tableExistsQuery);
     $query->prepare([
         ':dbName' => getenv('GLYPHIC_DATABASE'),
         ':tableName' => 'glyf_init'
@@ -198,24 +205,20 @@ try {
         );
     }
 
-    try {
-
-        $transaction = new PDOTransaction;
-        foreach ($queries as $tableName => $tableQuery) {
-            $transaction->query($tableQuery);
-            $transaction->post();
-        }
-        $transaction->commit();
-
-    } catch (\PDOException $e) {
-
-        $transaction->rollBack();
-
+    foreach ($queries as $tableName => $tableQuery) {
+        $tableCreate = new PDOQueryController($tableQuery);
+        $tableCreate->post();
     }
 
+    file_put_contents($init,TimeStamp::now());
 
-
-
+    Response::transmit([
+        'code' => 201,
+        'payload' => [
+            'status'=>'201',
+            'message' => 'App initialized'
+        ]
+    ]);
 
 
 

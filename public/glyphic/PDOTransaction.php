@@ -81,6 +81,11 @@ class PDOTransaction
         return $this->pdoDriver->rollBack();
     }
 
+    public function getLastInsertId()
+    {
+        return $this->pdoDriver->lastInsertId();
+    }
+
 
 
 
