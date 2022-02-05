@@ -93,6 +93,6 @@ try {
     }
     Response::transmit([
         'code' => 400,
-        'exception' => 'Unhandled Exception'
+        'exception' => $e->getMessage()
     ]);
 }

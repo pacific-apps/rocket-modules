@@ -19,6 +19,7 @@ use \core\exceptions\ResourceAccessForbidden;
 use \jwt\Token;
 use \glyphic\RequireApiEndpoint;
 use \glyphic\PDOQueryController;
+use \glyphic\PDOTransaction;
 use \glyphic\QueryBuilder;
 use \glyphic\TimeStamp;
 use \glyphic\TypeOf;
@@ -32,6 +33,9 @@ try {
 
     # Declare all your database queries here
     $queries = [];
+
+    # Require headers
+    RequireApiEndpoint::header('');
 
     # Require API Method endpoint
     RequireApiEndpoint::method('');
