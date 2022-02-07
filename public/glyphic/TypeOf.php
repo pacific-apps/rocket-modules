@@ -54,6 +54,14 @@ class TypeOf
             return null;
         }
 
+        if ($flag==='NOT EMPTY') {
+            if (trim($data)==='') {
+                throw new BadRequestException (
+                    'Invalid Data Type: '.$label
+                );
+            }
+        }
+
         return htmlspecialchars($data, ENT_QUOTES, 'UTF-8');
     }
 

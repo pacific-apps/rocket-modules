@@ -20,7 +20,7 @@ use \core\exceptions\BadRequestException;
 use \core\exceptions\AlreadyExistsException;
 use \core\exceptions\ConfigurationErrorException;
 use \core\exceptions\RecordNotFoundException;
-use \core\exceptions\ResourceAccessForbidden;
+use \core\exceptions\ResourceAccessForbiddenException;
 use \jwt\Token;
 use \glyphic\RequireApiEndpoint;
 use \glyphic\PDOQueryController;
@@ -74,5 +74,8 @@ try {
     Response::transmit([
         'code' => 400,
         'exception' => 'Unhandled Exception'
+
+        # Allows you to see the exact error message passed on the throw statement
+        //'exception'=>$e->getMessage()
     ]);
 }

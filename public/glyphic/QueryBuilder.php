@@ -7,36 +7,16 @@ use \core\exceptions\ConfigurationErrorException;
 class QueryBuilder
 {
 
-    private $storagePath;
-    private $pSqlPath;
+    private $queryString;
     private $data;
     private $setArguments;
 
     public function __construct(
-        string $pSqlFile = '',
-        array $data = null
+        string $queryString
         )
     {
-        $this->storagePath  = ROOT."/data/glyphic/queries/";
-        $this->pSqlPath     = $this->storagePath.$pSqlFile;
+        $this->queryString = $queryString;
 
-        if (!file_exists($this->pSqlPath.'.psql')) {
-            throw new ConfigurationErrorException(
-                'Unable to locate pSql File: '.$this->pSqlPath
-            );
-        }
-
-        $this->setArguments = null;
-        $this->data = $data ?? [];
-
-    }
-
-    public function use(
-        string $pSqlFile
-        )
-    {
-        $this->pSqlPath = $this->storagePath.$pSqlFile;
-        return $this;
     }
 
     public function data(
@@ -52,7 +32,7 @@ class QueryBuilder
         $this->data['setArguments'] = $this->setArguments;
         return $this->parse(
             $this->data,
-            file_get_contents($this->pSqlPath.'.psql')
+            $this->queryString
         );
     }
 
