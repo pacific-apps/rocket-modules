@@ -38,29 +38,20 @@ try {
 
     # Declare all your database queries here
     $queries = [
-        "get address by type" => "
-            SELECT id
-            FROM s_glyf_user_adrs
-            WHERE addressType = :addressType
-            AND userId = :userId
-            AND tenantId IN (SELECT tenantId FROM m_glyf_tnt WHERE publicKey = :publicKey)
-            AND recordType = 'tenant.user'
+        "create review on posts" => "
+            INSERT INTO m_glyf_reviews
+            (reviewId, reviewFor, reviewerId, score, title, content, createdAt, updatedAt, status, tenantId, recordType)
+            VALUES
+            (:reviewId, :reviewFor, :reviewerId, :score, :title, :content, :createdAt, :updatedAt, 'ACTIVE', (SELECT tenantId FROM m_glyf_tnt WHERE publicKey = :publicKey), 'tenant.user.post.review')
         ",
-        "get address type by id" => "
-            SELECT addressType
-            FROM s_glyf_user_adrs
-            WHERE id = :rowId
-            AND userId = :userId
+        "has reviewed the post" => "
+            SELECT reviewId
+            FROM m_glyf_reviews
+            WHERE reviewFor = :reviewFor
+            AND reviewerId = :reviewerId
+            AND status = 'ACTIVE'
             AND tenantId IN (SELECT tenantId FROM m_glyf_tnt WHERE publicKey = :publicKey)
-            AND recordType = 'tenant.user'
-        ",
-        "switch address type"=>"
-            UPDATE s_glyf_user_adrs
-            SET addressType = :addressType
-            WHERE id = :rowId
-            AND userId = :userId
-            AND tenantId IN (SELECT tenantId FROM m_glyf_tnt WHERE publicKey = :publicKey)
-            AND recordType = 'tenant.user'
+            AND recordType = 'tenant.user.post.review'
         "
     ];
 
@@ -68,13 +59,15 @@ try {
     RequireApiEndpoint::header();
 
     # Require API Method endpoint
-    RequireApiEndpoint::method('PUT');
+    RequireApiEndpoint::method('POST');
 
     # Require API payload
     RequireApiEndpoint::payload([
         'token',
-        'switchTo',
-        'id'
+        'reviewFor',
+        'title',
+        'content',
+        'score'
     ]);
 
 
@@ -96,7 +89,6 @@ try {
         $payload['userId'] ?? null
     );
 
-
     # Getting the requester Public Key
     $requester['publicKey'] = TypeOf::alphanum(
         'Public key',
@@ -113,91 +105,67 @@ try {
         );
     }
 
-
-    /**
-     * Get the row Id of the address of the type
-     * that needs to be switched into
-     */
+    // (reviewId, reviewFor, reviewerId, score, title, content, createdAt, updatedAt, status, tenantId, recordType)
     $query = new PDOQueryController(
-        $queries['get address by type']
+        $queries['has reviewed the post']
     );
     $query->prepare([
-        ':userId' => $requester['userId'],
-        ':publicKey' => $requester['publicKey'],
-        ':addressType' => TypeOf::alpha(
-            'Switch To',
-            $request->payload()->switchTo
+        ':reviewFor' => TypeOf::alphanum(
+            'Post Id (review for)',
+            $request->payload()->reviewFor
+        ),
+        ':reviewerId' => TypeOf::alphanum(
+            'User Id',
+            $requester['userId']
+        ),
+        ':publicKey' => TypeOf::alphanum(
+            'Public Key',
+            $requester['publicKey']
         )
     ]);
 
-    $addressToSwitchWith = $query->get();
+    $pastReview = $query->get();
 
-    if (!$addressToSwitchWith['hasRecord']) {
-        throw new RecordNotFoundException(
-            'Address type of '.$request->payload()->switchTo.' not found for this user'
+    if ($pastReview['hasRecord']) {
+        throw new AlreadyExistsException(
+            'User already reviewed this post'
         );
     }
 
-
-    /**
-     * Get the address type of the address that requests
-     * the switch
-     */
-    $query = new PDOQueryController(
-        $queries['get address type by id']
-    );
-    $query->prepare([
-        ':userId' => $requester['userId'],
+    // Preparing the review data
+    $review = [
+        ':reviewId' => UniqueId::create32bitKey(UniqueId::BETANUMERIC),
+        ':reviewFor' => $request->payload()->reviewFor,
+        ':reviewerId' => $requester['userId'],
         ':publicKey' => $requester['publicKey'],
-        ':rowId' => TypeOf::integer(
-            'Id',
-            $request->payload()->id
-        )
-    ]);
+        ':score' => TypeOf::integer(
+            'Review Score',
+            $request->payload()->score
+        ),
+        ':title' => TypeOf::all(
+            'Review Title',
+            $request->payload()->title,
+            'NULLABLE'
+        ),
+        ':content' => TypeOf::all(
+            'Review Content',
+            $request->payload()->content,
+            'NOT EMPTY'
+        ),
+        ':createdAt' => TimeStamp::now(),
+        ':updatedAt' => TimeStamp::now()
+    ];
 
-    $addressToSwitchFrom = $query->get();
-
-    if (!$addressToSwitchFrom['hasRecord']) {
-        throw new RecordNotFoundException(
-            'Address with id '.$request->payload()->id.' not found for this user'
-        );
-    }
-
-    /**
-     * Switch operation
-     */
 
     try {
 
         $transactions = new PDOTransaction();
 
-        /**
-         * Switch address type with
-         */
-        $transactions->query($queries['switch address type']);
-        $transactions->prepare([
-            ':addressType' => $addressToSwitchFrom['addressType'],
-            ':rowId' => $addressToSwitchWith['id'],
-            ':userId' => $requester['userId'],
-            ':publicKey' => $requester['publicKey']
-        ]);
-        $transactions->post();
-
-        /**
-         * Switch address type from it's original address type to the
-         * the one provided by user on the request
-         */
-        $transactions->query($queries['switch address type']);
-        $transactions->prepare([
-            ':addressType' => $request->payload()->switchTo,
-            ':rowId' => $request->payload()->id,
-            ':userId' => $requester['userId'],
-            ':publicKey' => $requester['publicKey']
-        ]);
+        $transactions->query($queries['create review on posts']);
+        $transactions->prepare($review);
         $transactions->post();
 
         $transactions->commit();
-
 
     } catch (\PDOException $e) {
 
@@ -212,9 +180,10 @@ try {
 
 
     Response::transmit([
+        'code' => 201
         'payload' => [
-            'status'=>'200 OK',
-            'message' => 'Switch address type completed'
+            'status'=>'201',
+            'message' => 'Review created'
         ]
     ]);
 
@@ -224,7 +193,7 @@ try {
             'code' => $e->code(),
 
             # Provides only generic error message
-            //'exception' => 'RocketExceptionsInterface::'.$e->exception(),
+            // 'exception' => 'RocketExceptionsInterface::'.$e->exception(),
 
             # Allows you to see the exact error message passed on the throw statement
             'exception'=>$e->getMessage()

@@ -140,6 +140,75 @@ try {
                 tenantId VARCHAR(32) NOT NULL,
                 recordType VARCHAR(32) NOT NULL
             );
+        ",
+        "main_posts"=>"
+            CREATE TABLE m_glyf_posts (
+                id INT(12) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                postId VARCHAR(32) NOT NULL,
+                userId VARCHAR(32) NOT NULL,
+                postTitle TEXT,
+                postBody TEXT,
+                createdAt VARCHAR(32) NOT NULL,
+                updatedAt VARCHAR(32),
+                status VARCHAR(32) NOT NULL,
+                tenantId VARCHAR(32) NOT NULL,
+                recordType VARCHAR(32) NOT NULL
+            );
+        ",
+        "sub_post_comment"=>"
+            CREATE TABLE s_glyf_post_cmt (
+                id INT(12) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                commentId VARCHAR(32) NOT NULL,
+                parentId VARCHAR(32) NOT NULL,
+                postId VARCHAR(32) NOT NULL,
+                userId VARCHAR(32) NOT NULL,
+                content TEXT,
+                createdAt VARCHAR(32) NOT NULL,
+                updatedAt VARCHAR(32),
+                status VARCHAR(32) NOT NULL,
+                tenantId VARCHAR(32) NOT NULL,
+                recordType VARCHAR(32) NOT NULL
+            );
+        ",
+        "sub_post_group" => "
+            CREATE TABLE s_glyf_post_grp (
+                id INT(12) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                postId VARCHAR(32) NOT NULL,
+                label VARCHAR(32),
+                groups VARCHAR(32),
+                collection VARCHAR(32),
+                type VARCHAR(32),
+                category VARCHAR(32),
+                tenantId VARCHAR(32) NOT NULL,
+                recordType VARCHAR(32) NOT NULL
+            );
+        ",
+        "sub_post_reacts"=>"
+            CREATE TABLE s_glyf_post_rtx (
+                id INT(12) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                postId VARCHAR(32) NOT NULL,
+                reactType VARCHAR(32) NOT NULL,
+                reactUserId VARCHAR(32) NOT NULL,
+                createdAt VARCHAR(32) NOT NULL,
+                tenantId VARCHAR(32) NOT NULL,
+                recordType VARCHAR(32) NOT NULL
+            );
+        ",
+        "main_reviews" => "
+            CREATE TABLE m_glyf_reviews (
+                id INT(12) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                reviewId VARCHAR(32) NOT NULL,
+                reviewFor VARCHAR(32) NOT NULL,
+                reviewerId VARCHAR(32) NOT NULL,
+                score VARCHAR(32) NOT NULL,
+                title TEXT,
+                content TEXT,
+                createdAt VARCHAR(32) NOT NULL,
+                updatedAt VARCHAR(32),
+                status VARCHAR(32) NOT NULL,
+                tenantId VARCHAR(32) NOT NULL,
+                recordType VARCHAR(32) NOT NULL
+            );
         "
     ];
 
