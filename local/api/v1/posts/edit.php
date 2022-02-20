@@ -52,7 +52,9 @@ try {
     # Require API payload
     RequireApiEndpoint::payload([
         'token',
-        'postId'
+        'postId',
+        'postTitle',
+        'postBody'
     ]);
 
 

@@ -39,7 +39,7 @@ try {
     # Declare all your database queries here
     $queries = [
         "get post data" => "
-            SELECT postId, postTitle, postBody, createdAt,
+            SELECT postId, postTitle, postBody, createdAt, visibility, userId,
                 (SELECT COUNT(reviewId) FROM m_glyf_reviews
                      WHERE reviewFor = :postId
                      AND status = 'ACTIVE'
@@ -50,6 +50,7 @@ try {
                 ) as totalReviewScore,
                 (SELECT reviewerId FROM m_glyf_reviews
                      WHERE reviewerId = :userId
+                     AND reviewFor = :postId
                      AND status = 'ACTIVE'
                      LIMIT 1
                 ) as hasRequesterReviewed
@@ -156,6 +157,26 @@ try {
         );
     }
 
+    if ($requester['type']==='public') {
+
+        if ($post['visibility']<50) {
+            throw new RecordNotFoundException(
+                'Post is not public'
+            );
+        }
+
+    }
+
+    if ($requester['type']!=='public') {
+        if ($post['visibility']<50) {
+            if ($post['userId']!==$requester['userId']) {
+                throw new RecordNotFoundException(
+                    'Post is not public'
+                );
+            }
+        }
+    }
+
     $query = new PDOQueryController(
         $queries['get post reviews']
     );
@@ -191,10 +212,10 @@ try {
             'code' => $e->code(),
 
             # Provides only generic error message
-            'exception' => 'RocketExceptionsInterface::'.$e->exception(),
+            //'exception' => 'RocketExceptionsInterface::'.$e->exception(),
 
             # Allows you to see the exact error message passed on the throw statement
-            //'exception'=>$e->getMessage()
+            'exception'=>$e->getMessage()
         ]);
         exit();
     }

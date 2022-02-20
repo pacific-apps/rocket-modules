@@ -40,18 +40,31 @@ try {
     $queries = [
         "create review on posts" => "
             INSERT INTO m_glyf_reviews
-            (reviewId, reviewFor, reviewerId, score, title, content, createdAt, updatedAt, status, tenantId, recordType)
+            (reviewId, reviewFor, reviewerId, score, title, visibility, content, createdAt, updatedAt, status, tenantId, recordType)
             VALUES
-            (:reviewId, :reviewFor, :reviewerId, :score, :title, :content, :createdAt, :updatedAt, 'ACTIVE', (SELECT tenantId FROM m_glyf_tnt WHERE publicKey = :publicKey), 'tenant.user.post.review')
+            (:reviewId, :reviewFor, :reviewerId, :score, :title, :visibility, :content, :createdAt, :updatedAt, 'ACTIVE', (SELECT tenantId FROM m_glyf_tnt WHERE publicKey = :publicKey), 'tenant.user.post.review')
         ",
-        "has reviewed the post" => "
-            SELECT reviewId
-            FROM m_glyf_reviews
-            WHERE reviewFor = :reviewFor
-            AND reviewerId = :reviewerId
-            AND status = 'ACTIVE'
-            AND tenantId IN (SELECT tenantId FROM m_glyf_tnt WHERE publicKey = :publicKey)
-            AND recordType = 'tenant.user.post.review'
+        "has reviewed the post and post visibility" => "
+            SELECT r.reviewId, p.status, p.visibility, p.postId
+            FROM m_glyf_reviews r
+            LEFT OUTER JOIN m_glyf_posts p ON p.postId = r.reviewFor
+                AND p.recordType = 'tenant.user.post'
+            WHERE r.reviewFor = :reviewFor
+            AND r.reviewerId = :reviewerId
+            AND r.status = 'ACTIVE'
+            AND r.tenantId IN (SELECT tenantId FROM m_glyf_tnt WHERE publicKey = :publicKey)
+            AND r.recordType = 'tenant.user.post.review'
+        ",
+        "post visibility and has reviewed this post" => "
+            SELECT p.postId, p.userId, p.status, p.visibility, r.reviewId
+            FROM m_glyf_posts p
+            LEFT OUTER JOIN m_glyf_reviews r ON p.postId = r.reviewFor
+                AND r.reviewerId = :reviewerId
+                AND r.status = 'ACTIVE'
+                AND r.recordType = 'tenant.user.post.review'
+            WHERE p.postId = :reviewFor
+            AND p.recordType = 'tenant.user.post'
+            AND p.tenantId IN (SELECT tenantId FROM m_glyf_tnt WHERE publicKey = :publicKey)
         "
     ];
 
@@ -107,7 +120,7 @@ try {
 
     // (reviewId, reviewFor, reviewerId, score, title, content, createdAt, updatedAt, status, tenantId, recordType)
     $query = new PDOQueryController(
-        $queries['has reviewed the post']
+        $queries['post visibility and has reviewed this post']
     );
     $query->prepare([
         ':reviewFor' => TypeOf::alphanum(
@@ -124,12 +137,48 @@ try {
         )
     ]);
 
-    $pastReview = $query->get();
+    $post = $query->get();
 
-    if ($pastReview['hasRecord']) {
+    // header('Content-Type: application/json');
+    // echo json_encode($post);
+    //
+    // exit();
+
+    # Checkpoints
+    if (!isset($post['postId'])) {
+        throw new RecordNotFoundException(
+            'Post ID not found'
+        );
+    }
+
+    if ($post['visibility']<50) {
+        throw new UnauthorizedAccessException(
+            'Unable to create review on this post, denied by visibility'
+        );
+
+    }
+
+    // if ($post['userId']===$requester['userId']) {
+    //     throw new ResourceAccessForbiddenException(
+    //         'Users can not review their own posts'
+    //     );
+    // }
+
+    if ($post['reviewId']!==null) {
         throw new AlreadyExistsException(
             'User already reviewed this post'
         );
+    }
+
+    # Post Visibility
+    if (isset($request->payload()->visibility)) {
+        $visibility = $request->payload()->visibility;
+        if ($visibility==='public') {
+            $visibilityScore = 99;
+        }
+        if ($visibility==='private') {
+            $visibilityScore = 1;
+        }
     }
 
     // Preparing the review data
@@ -147,6 +196,7 @@ try {
             $request->payload()->title,
             'NULLABLE'
         ),
+        ':visibility' => $visibilityScore ?? 99,
         ':content' => TypeOf::all(
             'Review Content',
             $request->payload()->content,
@@ -180,7 +230,7 @@ try {
 
 
     Response::transmit([
-        'code' => 201
+        'code' => 201,
         'payload' => [
             'status'=>'201',
             'message' => 'Review created'

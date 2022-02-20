@@ -7,6 +7,11 @@
 
 declare(strict_types=1);
 
+# Error displaying, has to be removed on production
+ini_set('error_reporting','E_ALL');
+ini_set( 'display_errors','1');
+error_reporting(E_ALL ^ E_STRICT);
+
 # Common libraries
 use \core\http\Request;
 use \core\http\Response;
@@ -33,11 +38,13 @@ try {
 
     # Declare all your database queries here
     $queries = [
-        "create new post" => "
-            INSERT INTO m_glyf_posts
-            (postId, userId, postTitle, visibility, postBody, createdAt, updatedAt, status, tenantId, recordType)
-            VALUES
-            (:postId, :userId, :postTitle, :visibility, :postBody, :createdAt, :updatedAt, 'ACTIVE', (SELECT tenantId FROM m_glyf_tnt WHERE publicKey = :publicKey), 'tenant.user.post')
+        "update post visibility" => "
+            UPDATE m_glyf_posts
+            SET visibility = :visibility, updatedAt = :updatedAt
+            WHERE postId = :postId
+            AND userId = :userId
+            AND recordType = 'tenant.user.post'
+            AND tenantId IN (SELECT tenantId FROM m_glyf_tnt WHERE publicKey = :publicKey)
         "
     ];
 
@@ -45,16 +52,15 @@ try {
     RequireApiEndpoint::header();
 
     # Require API Method endpoint
-    RequireApiEndpoint::method('POST');
+    RequireApiEndpoint::method('PUT');
 
     # Require API payload
     RequireApiEndpoint::payload([
         'token',
-        'postTitle',
-        'postBody'
+        'postId',
+        'visibility'
     ]);
 
-    # Requester validation
     $jwt = new Token($request->payload()->token);
 
     if (!$jwt->isValid()) {
@@ -88,19 +94,20 @@ try {
         );
     }
 
-    # Post Visibility
-    if (isset($request->payload()->visibility)) {
-        $visibility = $request->payload()->visibility;
-        if ($visibility==='public') {
-            $visibilityScore = 99;
-        }
-        if ($visibility==='private') {
-            $visibilityScore = 1;
-        }
+    $visibility = $request->payload()->visibility;
+
+    if ($visibility==='public') {
+        $visibilityScore = 99;
     }
 
-    $post = [
-        ':postId' => UniqueId::create32bitKey(UniqueId::BETANUMERIC),
+    if ($visibility==='private') {
+        $visibilityScore = 1;
+    }
+
+    $query = new PDOQueryController(
+        $queries['update post visibility']
+    );
+    $query->prepare([
         ':userId' => TypeOf::alphanum(
             'User Id',
             $requester['userId']
@@ -109,32 +116,21 @@ try {
             'Public Key',
             $requester['publicKey']
         ),
-        ':postTitle' => TypeOf::all(
-            'Post Title',
-            $request->payload()->postTitle,
-            'NULLABLE'
+        ':postId' => TypeOf::alphanum(
+            'Post Id',
+            $request->payload()->postId
         ),
         ':visibility' => $visibilityScore ?? 99,
-        ':postBody' => TypeOf::all(
-            'Post Body',
-            $request->payload()->postBody,
-            'NOT EMPTY'
-        ),
-        ':createdAt' => TimeStamp::now(),
         ':updatedAt' => TimeStamp::now()
-    ];
-
-    $query = new PDOQueryController(
-        $queries['create new post']
-    );
-    $query->prepare($post);
+    ]);
     $query->post();
 
+
+
     Response::transmit([
-        'code' => 201,
         'payload' => [
-            'status'=>'201',
-            'message' => 'Post created'
+            'status'=>'200 OK',
+            'message' => 'Post visibility updated'
         ]
     ]);
 
@@ -144,18 +140,19 @@ try {
             'code' => $e->code(),
 
             # Provides only generic error message
-            // 'exception' => 'RocketExceptionsInterface::'.$e->exception(),
+            //'exception' => 'RocketExceptionsInterface::'.$e->exception(),
 
             # Allows you to see the exact error message passed on the throw statement
             'exception'=>$e->getMessage()
+
         ]);
         exit();
     }
     Response::transmit([
         'code' => 400,
-        'exception' => 'Unhandled Exception'
+        //'exception' => 'Unhandled Exception'
 
         # Allows you to see the exact error message passed on the throw statement
-        //'exception'=>$e->getMessage()
+        'exception'=>$e->getMessage()
     ]);
 }

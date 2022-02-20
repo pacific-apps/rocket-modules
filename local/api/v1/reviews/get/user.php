@@ -56,11 +56,12 @@ try {
             FROM m_glyf_posts p
             WHERE p.userId = :userId
             AND p.recordType = 'tenant.user.post'
+            AND p.visibility > :minVisibilityScore
             AND p.tenantId IN (SELECT tenantId FROM m_glyf_tnt WHERE publicKey = :publicKey)
             AND p.status = 'ACTIVE'
         ",
         "get user posts with reviews" => "
-            SELECT p.postId, p.postTitle, p.postBody, p.createdAt, p.status,
+            SELECT p.postId, p.postTitle, p.postBody, p.createdAt, p.status, p.visibility,
                 (SELECT COUNT(reviewFor) FROM m_glyf_reviews
                     WHERE reviewFor = p.postId
                     AND status = 'ACTIVE'
@@ -74,8 +75,15 @@ try {
             FROM m_glyf_posts p
             WHERE p.userId = :userId
             AND p.recordType = 'tenant.user.post'
+            AND p.visibility > :minVisibilityScore
             AND p.tenantId IN (SELECT tenantId FROM m_glyf_tnt WHERE publicKey = :publicKey)
             AND p.status = 'ACTIVE'
+        ",
+        "get user reviews bottomline" => "
+            SELECT COUNT(reviewFor) as totalReviews, SUM(score) as totalScore
+            FROM m_glyf_reviews r
+            WHERE r.reviewFor IN (SELECT postId FROM m_glyf_posts WHERE userId = :userId)
+            AND r.status = 'ACTIVE'
         "
     ];
 
@@ -92,6 +100,52 @@ try {
     ]);
 
 
+    $requester['userId'] = 'nonexistent';
+    $requester['type'] = 'public';
+    $minVisibilityScore = 50;
+
+    if (isset($request->query()->token)) {
+
+        if ($request->query()->token!=='public') {
+
+            $requester['type'] = 'user';
+
+            # Requester validation
+            $jwt = new Token($request->query()->token);
+
+            if (!$jwt->isValid()) {
+                throw new UnauthorizedAccessException(
+                    'Token provided is either expired or invalid'
+                );
+            }
+
+            $payload = $jwt->payload();
+
+            # Getting the requester User Id
+            $requester['userId'] = TypeOf::alphanum(
+                'User Id',
+                $payload['userId'] ?? null
+            );
+
+            # Getting the requester Public Key
+            $requester['publicKey'] = TypeOf::alphanum(
+                'Public key',
+                $payload['publicKey'] ?? null
+            );
+
+            # Making sure that the user is on active status
+            if ('ACTIVE'!==TypeOf::alpha(
+                'User status',
+                $payload['status'] ?? null
+            )) {
+                throw new UnauthorizedAccessException(
+                    'Requester status is not active'
+                );
+            }
+
+        }
+
+    }
 
 
     $query = new PDOQueryController(
@@ -115,20 +169,43 @@ try {
         );
     }
 
+    $query = new PDOQueryController(
+        $queries['get user reviews bottomline']
+    );
+    $query->prepare([
+        ':userId' => $user['userId']
+    ]);
+    $bottomline = $query->get();
+
     // header('Content-Type: application/json');
-    // echo json_encode($user);
+    // echo json_encode($bottomline);
     // exit();
+
+    if ($requester['type']!=='public') {
+        if ($user['userId']==$requester['userId']) {
+            $minVisibilityScore = 0;
+        }
+    }
 
     $query = new PDOQueryController(
         $queries['get user posts with reviews']
     );
     $query->prepare([
         ':userId'=>$user['userId'],
-        ':publicKey'=>$request->query()->publickey
+        ':publicKey'=>$request->query()->publickey,
+        ':minVisibilityScore' => $minVisibilityScore
     ]);
     $posts = $query->getAll();
 
-
+    if (!empty($posts)) {
+        foreach ($posts as $key => $post) {
+            if ($posts[$key]['visibility']>50) {
+                $posts[$key]['visibility'] = 'public';
+            } else {
+                $posts[$key]['visibility'] = 'private';
+            }
+        }
+    }
 
     Response::transmit([
         'payload' => [
@@ -136,6 +213,10 @@ try {
             'firstName' => $user['firstName'],
             'lastName' => $user['lastName'],
             'profilePhoto' => $user['profilePhoto'],
+            'bottomLine' => [
+                'totalReviews' => intval($bottomline['totalReviews']),
+                'averageScore' => $bottomline['totalScore'] / $bottomline['totalReviews']
+            ],
             'posts' => [
                 'page'=>1,
                 'list'=>$posts
@@ -149,10 +230,10 @@ try {
             'code' => $e->code(),
 
             # Provides only generic error message
-            'exception' => 'RocketExceptionsInterface::'.$e->exception(),
+            // 'exception' => 'RocketExceptionsInterface::'.$e->exception(),
 
             # Allows you to see the exact error message passed on the throw statement
-            //'exception'=>$e->getMessage()
+            'exception'=>$e->getMessage()
         ]);
         exit();
     }
